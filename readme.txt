@@ -1,7 +1,7 @@
 === miniOrange WP LDAP Login ===
 Contributors: miniOrange
 Donate link: http://miniorange.com
-Tags:ldap, AD, miniorange ldap gateway, ldap sso, AD sso, ldap authentication, AD authentication, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on, active directory, openldap, miniorange login form, mo user login, miniorange authentication, miniOrange, mo, login form, miniorange login, social login, WordPress login, widget, miniorange register, social user registration, user registration, open source single sign on for WordPress, sso saml, sso integration WordPress
+Tags:ldap, AD,ldap gateway, ldap sso, AD sso, ldap authentication, AD authentication, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on, active directory, openldap, login form, user login, authentication, login, social login, WordPress login, widget, register, social user registration, user registration, open source single sign on for WordPress, sso saml, sso integration WordPress, sso, single sign on, two factor authentication, safe authentication
 Requires at least: 2.0.2
 Tested up to: 4.2.1
 Stable tag: 2.2.0
