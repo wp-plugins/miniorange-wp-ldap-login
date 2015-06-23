@@ -35,8 +35,8 @@ For more details - Refer: http://miniorange.com
 3. Go to `Users/Groups-> Manage Users/Groups-> Add User` and add users.
 
 = Configuring miniOrange Gateway =
-1. Install miniOrange Gateway on a DMZ server which has access to the internal LDAP server.
-2. Once you are logged into the Admin Console of the Gateway, enter the LDAP Server URL, Service Account DN and Service Account Password. Click on Test Connection and Save.
+1. Login to miniOrange to configure miniOrange Gateway.
+2. Once you are logged in, enter the LDAP Server URL, Service Account DN and Service Account Password. Click on Test Connection and Save.
 3. If connection is successful, you will be shown a User-Mapping screen. Enter the Distinguished Name Attribute(eg. distinguishedName), LDAP Search Base and LDAP Search filter for your LDAP implementation.
 4. Click on Save.
 
