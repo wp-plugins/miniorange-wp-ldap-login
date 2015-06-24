@@ -236,7 +236,7 @@
 									li>Include instructions to add link and configure SAML app in marketing page. Add a link from here</li-->
 								</ul>
 								</li>
-								<li>Please email us at info@miniorange.com for configuration of miniOrange Gateway.</li>
+								<li><b>Please email us at info@miniorange.com for configuration of miniOrange Gateway. Also mention the information given above.</b></li>
 						</p>
 						</td>
 					</tr>
