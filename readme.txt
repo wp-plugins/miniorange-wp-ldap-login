@@ -36,12 +36,12 @@ For more details - Refer: http://miniorange.com
 
 = Configuring miniOrange Gateway =
 Please email us at info@miniorange.com for configuration of miniOrange Gateway. Also send us the following information so we can help you set it up.
-a. LDAP Connection String -> Connection string for the LDAP Server. eg: ldap://myldapserver.domain:port
-b. Service Account Distinguished Name(DN). eg: cn=admin,dc=domain,dc=com
-c. Server Account Password
-d. DistinguishedName Attribute (DN Attribute) -> attribute in LDAP which stores unique DN value. eg: distinguishedName in AD, entryDN in OpenLDAP
-e. SearchBase -> Define where users logging in will be located in the LDAP Environment
-f. Search Filter -> It is a basic LDAP Query for searching of user based on mapping of username to a particular attribute. eg: (&(objectClass=*)(cn=?))
+1. LDAP Connection String -> Connection string for the LDAP Server. eg: ldap://myldapserver.domain:port
+2. Service Account Distinguished Name(DN). eg: cn=admin,dc=domain,dc=com
+3. Server Account Password
+4. DistinguishedName Attribute (DN Attribute) -> attribute in LDAP which stores unique DN value. eg: distinguishedName in AD, entryDN in OpenLDAP
+5. SearchBase -> Define where users logging in will be located in the LDAP Environment
+6. Search Filter -> It is a basic LDAP Query for searching of user based on mapping of username to a particular attribute. eg: (&(objectClass=*)(cn=?))
 
 = Plugin installation =
 1. Upload `miniorange-wpldaplogin.zip` to the `/wp-content/plugins/` directory.
