@@ -31,14 +31,12 @@ For more details - Refer: http://miniorange.com
 
 = Setting up miniOrange Customer account =
 1. Go to <a href="https://auth.miniorange.com/moas/login" target="_blank">miniOrange login</a> . Register a new account by clicking on `Sign up for a Free Trial`.
-2. Go back to <a href="https://auth.miniorange.com/moas/login" target="_blank">miniOrange login</a> and login with your credentials.
+2. You will receive an email. Go back to <a href="https://auth.miniorange.com/moas/login" target="_blank">miniOrange login</a> and login with your credentials.
 3. Go to `Users/Groups-> Manage Users/Groups-> Add User` and add users.
 
 = Configuring miniOrange Gateway =
-1. Login to miniOrange to configure miniOrange Gateway.
-2. Once you are logged in, enter the LDAP Server URL, Service Account DN and Service Account Password. Click on Test Connection and Save.
-3. If connection is successful, you will be shown a User-Mapping screen. Enter the Distinguished Name Attribute(eg. distinguishedName), LDAP Search Base and LDAP Search filter for your LDAP implementation.
-4. Click on Save.
+Please email us at info@miniorange.com or <a href="http://miniorange.com/contact" target="_blank">Contact us</a> for configuration of miniOrange Gateway.
+
 
 = Plugin installation =
 1. Upload `miniorange-wpldaplogin.zip` to the `/wp-content/plugins/` directory.
