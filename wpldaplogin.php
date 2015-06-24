@@ -225,7 +225,7 @@
 							<ol>
 								<li>The URL denotes where the miniOrange Gateway resides. The server where the gateway is hosted needs to be accessible from your WordPress instance. Ensure that appropriate firewall rules are in place</li>
 								<li>LDAP Configuration is done in the miniOrange Gateway. The following information is required in order to configure connection to the LDAP Server</li>
-								<ul>
+								<li><ul>
 									<li>a. LDAP Connection String -> Connection string for the LDAP Server. eg: ldap://myldapserver.domain:port</li>
 									<li>b. Service Account Distinguished Name(DN). eg: cn=admin,dc=domain,dc=com</li>
 									<li>c. Server Account Password</li>
@@ -235,9 +235,8 @@
 									<!-- TO DO ATFER MARKETING PAGE IS UP
 									li>Include instructions to add link and configure SAML app in marketing page. Add a link from here</li-->
 								</ul>
-								
-								Please email us at info@miniorange.com for configuration of miniOrange Gateway.
-							</ol>
+								</li>
+								<li>Please email us at info@miniorange.com for configuration of miniOrange Gateway.</li>
 						</p>
 						</td>
 					</tr>
