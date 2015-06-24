@@ -235,6 +235,8 @@
 									<!-- TO DO ATFER MARKETING PAGE IS UP
 									li>Include instructions to add link and configure SAML app in marketing page. Add a link from here</li-->
 								</ul>
+								
+								Please email us at info@miniorange.com for configuration of miniOrange Gateway.
 							</ol>
 						</p>
 						</td>
