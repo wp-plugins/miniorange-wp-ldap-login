@@ -42,7 +42,7 @@ For more details - Refer: http://miniorange.com
 5. SearchBase -> Define where users logging in will be located in the LDAP Environment
 6. Search Filter -> It is a basic LDAP Query for searching of user based on mapping of username to a particular attribute. eg: (&(objectClass=*)(cn=?))
 
-Please email us at info@miniorange.com for configuration of miniOrange Gateway. Also send us the information so we can help you set it up.
+Please email us at info@miniorange.com for configuration of miniOrange Gateway. Also send us the above information so we can help you set it up.
 
 = Plugin installation =
 1. Upload `miniorange-wpldaplogin.zip` to the `/wp-content/plugins/` directory.
