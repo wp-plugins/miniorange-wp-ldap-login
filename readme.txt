@@ -50,7 +50,7 @@ Please email us at info@miniorange.com or <a href="http://miniorange.com/contact
 Our very simple and easy registration lets you register with miniOrange. miniOrange LDAP login works if you are connected to miniOrange. Once you have registered with a valid email-address and phone number, you will be able to add your LDAP configuration.
 
 = I am not able to get the configuration right. =
-`Make sure that if there is a firewall, you OPEN THE FIREWALL to allow incoming requests to your LDAP. Please open port 389(636 for SSL or ldaps). Host - 52.6.168.155 , 52.6.204.243 - This is the host from where the LDAP connection as well as authentication requests are going to be made.` For further help please click on the Troubleshooting button. Check the steps to see what you could have missed. If that does not help, please check the format of demo settings. You can copy them over using `Copy Default Config`.
+Make sure that if there is a firewall, you `OPEN THE FIREWALL` to allow incoming requests to your LDAP. Please open port 389(636 for SSL or ldaps). Host - 52.6.168.155 , 52.6.204.243 - This is the host from where the LDAP connection as well as authentication requests are going to be made. For further help please click on the Troubleshooting button. Check the steps to see what you could have missed. If that does not help, please check the format of demo settings. You can copy them over using `Copy Default Config`.
 
 = For support or troubleshooting help =
 Please email us at info@miniorange.com or <a href="http://miniorange.com/contact" target="_blank">Contact us</a>.
