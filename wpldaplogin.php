@@ -4,43 +4,37 @@
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 1.0
+    Version: 2.0
     Author URI: http://miniorange.com
     */
 	
 	require_once 'generate_saml_assertion.php';
+	require_once 'mo_ldap_pages.php';
+	require('mo_ldap_support.php');
+	require('class-mo-ldap-customer-setup.php');
+	require('class-mo-ldap-utility.php');
+	require('class-mo-ldap-config.php');
 	
-	class wp_ldap_login{
+	class Mo_Ldap_Login{
 		
 		function __construct(){
-			add_action('admin_menu', array($this, 'wp_ldap_login_widget_menu'));
+			add_action('admin_menu', array($this, 'mo_ldap_login_widget_menu'));
 			add_action('admin_init', array($this, 'login_widget_save_options'));
+			add_action( 'admin_enqueue_scripts', array( $this, 'mo_ldap_settings_style' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'mo_ldap_settings_script' ) );
 			add_action('parse_request', array($this, 'parse_sso_request'));
 			remove_action( 'admin_notices', array( $this, 'success_message') );
 			remove_action( 'admin_notices', array( $this, 'error_message') );
 			add_filter('query_vars', array($this, 'plugin_query_vars'));
-			
+			register_deactivation_hook(__FILE__, array( $this, 'mo_ldap_deactivate'));
+			add_action( 'login_footer', 'mo_ldap_link' );
 			if(get_option('mo_ldap_enable_ldap_login') == 1){
 				remove_filter('authenticate', 'wp_authenticate_username_password', 20, 3);
 				add_filter('authenticate', array($this, 'ldap_login'), 20, 3);
 			}
-			
-			
-		}
-		function success_message() {
-			$class = "error";
-			$message = get_option('message');
-			echo "<div class='" . $class . "'> <p>" . $message . "</p></div>"; 
 		}
 		
-		function error_message() {
-			$class = "updated";
-			$message = get_option('message');
-			echo "<div class='" . $class . "'> <p>" . $message . "</p></div>"; 
-		}
-				
 		function ldap_login($user, $username, $password){			
-			
 			if(empty($username) || empty ($password)){        
 				//create new error object and add errors to it.
 				$error = new WP_Error();
@@ -48,46 +42,16 @@
 				if(empty($username)){ //No email
 					$error->add('empty_username', __('<strong>ERROR</strong>: Email field is empty.'));
 				}
-
+				
 				if(empty($password)){ //No password
 					$error->add('empty_password', __('<strong>ERROR</strong>: Password field is empty.'));
 				}
-
 				return $error;
 			}
 			
-			$gateway_url = get_option('ldap_gateway_url');
-			global $post;
-			//Send cURL request to gateway url and parse response
-				
-			//calls to encrypt username and password
-			$encrypted_username = $this->encrypt($username);
-			$encrypted_password = $this->encrypt($password);			
-					
-			//send post request to gateway url
-			$data = array("userName" => $encrypted_username, "password" => $encrypted_password);
+			$mo_ldap_config = new Mo_Ldap_Config();
+			$status = $mo_ldap_config->ldap_login($username, $password);
 			
-			$data_string = json_encode($data);
-									
-			$curl = curl_init();
-			curl_setopt_array($curl, array(
-				CURLOPT_RETURNTRANSFER => 1,
-				CURLOPT_URL => $gateway_url."/rest/ldapauth/login",
-				CURLOPT_POST => 1,
-				CURLOPT_POSTFIELDS => $data_string,
-				CURLOPT_HTTPHEADER => array(                                                                          
-					'Content-Type: application/json',                                                                                
-					'Content-Length: ' . strlen($data_string))
-			));
-			$response = curl_exec($curl);
-			if (curl_errno($curl)) {
-				   print curl_error($curl);
-			} 
-			$decoded_response = (array)json_decode($response);
-
-			curl_close($curl);
-					
-			$status = $decoded_response['statusCode'];
 			if($status == 'SUCCESS'){
 			  if( username_exists( $username)) {
 				  $user = get_userdatabylogin($username);
@@ -96,80 +60,342 @@
 			   } else {
 				  return $error;
 			   }
-						
 				wp_redirect( site_url() );
 				exit;
 						
 			} else {
-				return $error;
+				//return $error;
 			}
 		}
 	
-		function encrypt($str){
-			$key = get_option("mo_ldap_secret_key");
-			$block = mcrypt_get_block_size('rijndael_128', 'ecb');
-			$pad = $block - (strlen($str) % $block);
-			$str .= str_repeat(chr($pad), $pad);
-			return base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, $key, $str, MCRYPT_MODE_ECB));
+		function mo_ldap_login_widget_menu(){
+			add_options_page('LDAP Login Config', 'LDAP Login Config', 'activate_plugins', 'mo_ldap_login', array( $this, 'mo_ldap_login_widget_options'));
 		}
-
 		
-		function wp_ldap_login_widget_menu(){
-			add_options_page('LDAP Login Config', 'LDAP Login Config', 'activate_plugins', 'wp_ldap_login_widget', array( $this, 'wp_ldap_login_widget_options'));
+		function mo_ldap_login_widget_options(){
+			update_option( 'mo_ldap_host_name', 'https://auth.miniorange.com' );
+			
+			//Setting default configuration
+			$default_config = array(
+				'server_url' => 'ldap://58.64.132.235:389',
+				'service_account_dn' => 'cn=testuser,cn=Users,dc=miniorange,dc=com',
+				'admin_password' => 'XXXXXXXX',
+				'dn_attribute' => 'distinguishedName',
+				'search_base' => 'cn=Users,dc=miniorange,dc=com',
+				'search_filter' => '(&(objectClass=*)(cn=?))',
+				'test_username' => 'testuser',
+				'test_password' => 'password'
+			);
+			update_option( 'mo_ldap_default_config', $default_config );
+			mo_ldap_settings();
 		}
 		
 		function login_widget_save_options(){
 			if(isset($_POST['option'])){
-				if($_POST['option'] == "login_widget_save_options"){	
+				if($_POST['option'] == "mo_ldap_register_customer") {		//register the customer
 				
-					//Check and sanitize inputs
-					$gateway_url = "";
-					$secret_key = "";
-					$enable_ldap_login = 0;
-					if(isset($_POST["gateway_url"]))
-						$gateway_url = sanitize_text_field($_POST["gateway_url"]);
-					if(isset($_POST["mo_ldap_secret_key"]))
-						$secret_key = sanitize_text_field($_POST["mo_ldap_secret_key"]);
-					if(isset($_POST["enable_ldap_login"]))
-						$enable_ldap_login = sanitize_text_field($_POST["enable_ldap_login"]);
-					
-					if(!empty($gateway_url) and !empty($secret_key)){
-						update_option("mo_ldap_gateway_url", $gateway_url);
-						update_option("mo_ldap_secret_key", $secret_key);
-						update_option("mo_ldap_enable_ldap_login", $enable_ldap_login);
-						update_option("message", "miniOrange Gateway Configuration saved");
-						$this->show_success_message();
+					//validate and sanitize
+					$email = '';
+					$phone = '';
+					$password = '';
+					$confirmPassword = '';
+					if( Mo_Ldap_Util::check_empty_or_null( $_POST['email'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['phone'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['password'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['confirmPassword'] ) ) {
+						update_option( 'mo_ldap_message', 'All the fields are required. Please enter valid entries.');
+						$this->show_error_message();
+						return;
+					} else if( strlen( $_POST['password'] ) < 6 || strlen( $_POST['confirmPassword'] ) < 6){	//check password is of minimum length 6
+						update_option( 'mo_ldap_message', 'Choose a password with minimum length 6.');
+						$this->show_error_message();
+						return;
 					} else{
-						update_option("message", "Error saving miniOrange Gateway Configuration");
+						$email = sanitize_email( $_POST['email'] );
+						$phone = sanitize_text_field( $_POST['phone'] );
+						$password = sanitize_text_field( $_POST['password'] );
+						$confirmPassword = sanitize_text_field( $_POST['confirmPassword'] );
+					}
+					update_option( 'mo_ldap_admin_email', $email );
+					update_option( 'mo_ldap_admin_phone', $phone );
+					
+					if(strcmp($password, $confirmPassword) == 0) {
+						update_option( 'mo_ldap_password', $password );
+						$customer = new Mo_Ldap_Customer();
+						$customerKey = json_decode($customer->create_customer(), true);
+						if(strcasecmp($customerKey['status'], 'CUSTOMER_USERNAME_ALREADY_EXISTS') == 0) {	//admin already exists in miniOrange
+							$content = $customer->get_customer_key();
+							$customerKey = json_decode($content, true);
+							if(json_last_error() == JSON_ERROR_NONE) {
+								$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Your account has been retrieved successfully.');
+							} else {
+								update_option( 'mo_ldap_message', 'You already have an account with miniOrange. Please enter a valid password.');
+								update_option('mo_ldap_verify_customer', 'true');
+								delete_option('mo_ldap_new_registration');
+								$this->show_error_message();
+							}
+						} else if(strcasecmp($customerKey['status'], 'SUCCESS') == 0) { 	//registration successful
+							$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Registration complete!');
+						}
+					} else {
+						update_option( 'mo_ldap_message', 'Password and Confirm password do not match.');
+						delete_option('verify_customer');
 						$this->show_error_message();
 					}
-					
-				} else if($_POST['option'] == "sso_config_options"){
-					
-					//Check and sanitize inputs
-					$customer_id = "";
-					$api_key = "";
-					$token_key = "";
-					if(isset($_POST["customer_id"]))
-						$customer_id = sanitize_text_field($_POST["customer_id"]);
-					if(isset($_POST["api_key"]))
-						$api_key = sanitize_text_field($_POST["api_key"]);
-					if(isset($_POST["token_key"]))
-						$token_key = sanitize_text_field($_POST["token_key"]);
-					
-					if(!empty($customer_id) and !empty($api_key) and !empty($token_key)){	
-						update_option("mo_ldap_customer_id", $customer_id);
-						update_option("mo_ldap_api_key", $api_key);
-						update_option("mo_ldap_token_key", $token_key);
-						update_option("message", "SSO Configuration saved");
-						$this->show_success_message();
-					} else{
-						update_option("message", "Error saving SSO Configuration");
+					update_option('mo_ldap_password', '');
+				} 
+				else if( $_POST['option'] == "mo_ldap_verify_customer" ) {	//login the admin to miniOrange
+			
+					//validation and sanitization
+					$email = '';
+					$password = '';
+					if( Mo_Ldap_Util::check_empty_or_null( $_POST['email'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['password'] ) ) {
+						update_option( 'mo_ldap_message', 'All the fields are required. Please enter valid entries.');
 						$this->show_error_message();
+						return;
+					} else{
+						$email = sanitize_email( $_POST['email'] );
+						$password = sanitize_text_field( $_POST['password'] );
+					}
+				
+					update_option( 'mo_ldap_admin_email', $email );
+					update_option( 'mo_ldap_password', $password );
+					$customer = new Mo_Ldap_Customer();
+					$content = $customer->get_customer_key();
+					$customerKey = json_decode( $content, true );
+					if( json_last_error() == JSON_ERROR_NONE ) {
+						update_option( 'mo_ldap_admin_phone', $customerKey['phone'] );
+						$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Your account has been retrieved successfully.');
+					} else {
+						update_option( 'mo_ldap_message', 'Invalid username or password. Please try again.');
+						$this->show_error_message();		
+					}
+					update_option('mo_ldap_password', '');
+				}
+				else if( $_POST['option'] == "mo_ldap_enable" ) {		//enable ldap login
+					update_option( 'mo_ldap_enable_ldap_login', isset($_POST['enable_ldap_login']) ? $_POST['enable_ldap_login'] : 0);
+					if(get_option('mo_ldap_enable_ldap_login')) {
+						update_option( 'mo_ldap_message', 'Login through your LDAP has been enabled.');
+						$this->show_success_message();
+					} else {
+						update_option( 'mo_ldap_message', 'Login through your LDAP has been disabled.');
+						$this->show_success_message();
+					}
+				}
+				else if( $_POST['option'] == "mo_ldap_save_config" ) {		//save ldap configuration
+					
+					//validation and sanitization
+					$server_name = '';
+					$dn = '';
+					$admin_ldap_password = '';
+					$dn_attribute = '';
+					$search_base = '';
+					$search_filter = '';
+					if( Mo_Ldap_Util::check_empty_or_null( $_POST['ldap_server'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['dn'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['admin_password'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['dn_attribute'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['search_base'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['search_filter'] ) ) {
+						update_option( 'mo_ldap_message', 'All the fields are required. Please enter valid entries.');
+						$this->show_error_message();
+						return;
+					} else{
+						$server_name = sanitize_text_field( $_POST['ldap_server'] );
+						$dn = sanitize_text_field( $_POST['dn'] );
+						$admin_ldap_password = sanitize_text_field( $_POST['admin_password'] );
+						$dn_attribute = sanitize_text_field( $_POST['dn_attribute'] );
+						$search_base = sanitize_text_field( $_POST['search_base'] );
+						$search_filter = sanitize_text_field( $_POST['search_filter'] );
 					}
 					
+					//Encrypting all fields and storing them
+					update_option( 'mo_ldap_server_url', Mo_Ldap_Util::encrypt($server_name));
+					update_option( 'mo_ldap_server_dn', Mo_Ldap_Util::encrypt($dn));
+					update_option( 'mo_ldap_server_password', Mo_Ldap_Util::encrypt($admin_ldap_password));
+					update_option( 'mo_ldap_dn_attribute', Mo_Ldap_Util::encrypt($dn_attribute));
+					update_option( 'mo_ldap_search_base', Mo_Ldap_Util::encrypt($search_base));
+					update_option( 'mo_ldap_search_filter', Mo_Ldap_Util::encrypt($search_filter));
+					
+					//This makes a call to check if connection is established successfully.
+					$mo_ldap_config = new Mo_Ldap_Config();
+					$content = $mo_ldap_config->test_connection(null);
+					$response = json_decode( $content, true );
+					
+					if(strcasecmp($response['statusCode'], 'SUCCESS') == 0) {
+						//This makes a call to save LDAP configuration
+						$save_content = $mo_ldap_config->save_ldap_config();
+						$save_response = json_decode( $save_content, true );
+						
+						if(strcasecmp($save_response['statusCode'], 'SUCCESS') == 0) {
+							update_option( 'mo_ldap_message', 'Connection was established successfully. Your configuration has been saved. Please test authentication to verify LDAP User Mapping Configuration.');
+							$this->show_success_message();
+						} else if(strcasecmp($save_response['statusCode'], 'ERROR') == 0) {
+							$this->delete_ldap_configuration();
+							update_option( 'mo_ldap_message', 'Connection was established successfully but an error occured. ' . $save_response['statusMessage']);
+							$this->show_error_message();
+						} else {
+							update_option( 'mo_ldap_message', 'Connection was established successfully but an error occured.');
+							$this->show_error_message();
+						}
+					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
+						$this->delete_ldap_configuration();
+						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Your configuration has not been saved.');
+						$this->show_error_message();
+					} else {
+						$this->delete_ldap_configuration();
+						update_option( 'mo_ldap_message', 'There was an error. Your configuration has not been saved.');
+						$this->show_error_message();
+					}
+				}
+				else if( $_POST['option'] == "mo_ldap_test_auth" ) {		//test authentication with current settings
+					$server_name = get_option( 'mo_ldap_server_url');
+					$dn = get_option( 'mo_ldap_server_dn');
+					$admin_ldap_password = get_option( 'mo_ldap_server_password');
+					$dn_attribute = get_option( 'mo_ldap_dn_attribute');
+					$search_base = get_option( 'mo_ldap_search_base');
+					$search_filter = get_option( 'mo_ldap_search_filter');
+					
+					//validation and sanitization
+					$test_username = '';
+					$test_password = '';
+					
+					//Check if username and password are empty
+					if( Mo_Ldap_Util::check_empty_or_null( $_POST['test_username'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['test_password'] ) ) {
+						update_option( 'mo_ldap_message', 'All the fields are required. Please enter valid entries.');
+						$this->show_error_message();
+						return;
+					} 
+					//Check if configuration is saved
+					else if( Mo_Ldap_Util::check_empty_or_null( $server_name ) || Mo_Ldap_Util::check_empty_or_null( $dn ) || Mo_Ldap_Util::check_empty_or_null( 		$admin_ldap_password ) || Mo_Ldap_Util::check_empty_or_null( $dn_attribute ) || Mo_Ldap_Util::check_empty_or_null( $search_base ) || Mo_Ldap_Util::check_empty_or_null( $search_filter ) ) {
+						update_option( 'mo_ldap_message', 'Please save LDAP Configuration to test authentication.');
+						$this->show_error_message();
+						return;
+					} else{
+						$test_username = sanitize_text_field( $_POST['test_username'] );
+						$test_password = sanitize_text_field( $_POST['test_password'] );
+					}
+					
+					//Call to authenticate test
+					$mo_ldap_config = new Mo_Ldap_Config();
+					$content = $mo_ldap_config->test_authentication($test_username, $test_password, null);
+					$response = json_decode( $content, true );
+					
+					if(strcasecmp($response['statusCode'], 'SUCCESS') == 0) {
+						update_option( 'mo_ldap_message', 'Test is successful! Your credentials have matched.');
+						$this->show_success_message();
+					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
+						update_option( 'mo_ldap_message', $response['statusMessage']);
+						$this->show_error_message();
+					} else {
+						update_option( 'mo_ldap_message', 'There was an error processing your request.');
+						$this->show_error_message();
+					}		
+				}
+				else if( $_POST['option'] == "mo_ldap_test_default_auth" ) {		//test default authentication with current settings
+					$default_config = get_option('mo_ldap_default_config');
+				
+					$default_test_username = $default_config['test_username'];
+					$default_test_password = $default_config['test_password'];
+					
+					//Call to test default authentication
+					$mo_ldap_config = new Mo_Ldap_Config();
+					$content = $mo_ldap_config->test_authentication($default_test_username, $default_test_password, true);
+					$response = json_decode( $content, true );
+					
+					if(strcasecmp($response['statusCode'], 'SUCCESS') == 0) {
+						update_option( 'mo_ldap_message', 'Authenticated successfully.');
+						$this->show_success_message();
+					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
+						update_option( 'mo_ldap_message', $response['statusMessage']);
+						$this->show_error_message();
+					} else {
+						update_option( 'mo_ldap_message', 'There was an error processing your request.');
+						$this->show_error_message();
+					}
+				}
+				else if( $_POST['option'] == "mo_ldap_test_default_config" ) {		//test default connection with current settings
+					//Call to test connection
+					$mo_ldap_config = new Mo_Ldap_Config();
+					$content = $mo_ldap_config->test_connection(true);
+					$response = json_decode( $content, true );
+					
+					if(strcasecmp($response['statusCode'], 'SUCCESS') == 0) {
+						update_option( 'mo_ldap_message', 'Connection was established successfully.');
+						$this->show_success_message();
+					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
+						update_option( 'mo_ldap_message', $response['statusMessage']);
+						$this->show_error_message();
+					} else {
+						update_option( 'mo_ldap_message', 'There was an error processing your request.');
+						$this->show_error_message();
+					}
+				}
+				else if($_POST['option'] == "mo_ldap_login_send_query"){
+					$query = '';
+					if( Mo_Ldap_Util::check_empty_or_null( $_POST['query_email'] ) || Mo_Ldap_Util::check_empty_or_null( $_POST['query'] ) ) {
+						update_option( 'mo_ldap_message', 'Please submit your query along with email.');
+						$this->show_error_message();
+						return;
+					} else{
+						$query = sanitize_text_field( $_POST['query'] );
+						$email = sanitize_text_field( $_POST['query_email'] );
+						$phone = sanitize_text_field( $_POST['query_phone'] );
+						$contact_us = new Mo_Ldap_Customer();
+						$submited = json_decode($contact_us->submit_contact_us($email, $phone, $query),true);
+						if(json_last_error() == JSON_ERROR_NONE) {
+							if ( $submited == false ) {
+								update_option('mo_ldap_message', 'Your query could not be submitted. Please try again.');
+								$this->show_error_message();
+							} else {
+								update_option('mo_ldap_message', 'Thanks for getting in touch! We shall get back to you shortly.');
+								$this->show_success_message();
+							}
+						}
+
+					}
 				}
 			}
+		}
+		
+		/*
+		 * Save all required fields on customer registration/retrieval complete.
+		 */
+		function save_success_customer_config($id, $apiKey, $token, $message) {
+			update_option( 'mo_ldap_admin_customer_key', $id );
+			update_option( 'mo_ldap_admin_api_key', $apiKey );
+			update_option( 'mo_ldap_customer_token', $token );
+			update_option('mo_ldap_password', '');
+			update_option( 'mo_ldap_message', $message);
+			delete_option('mo_ldap_verify_customer');
+			delete_option('mo_ldap_new_registration');
+			$this->show_success_message();
+		}
+		
+		/*
+		 * Delelte LDAP Config
+		 */
+		function delete_ldap_configuration() {
+			update_option( 'mo_ldap_server_url', '');
+			update_option( 'mo_ldap_server_dn', '');
+			update_option( 'mo_ldap_server_password', '');
+			update_option( 'mo_ldap_dn_attribute', '');
+			update_option( 'mo_ldap_search_base', '');
+			update_option( 'mo_ldap_search_filter', '');
+		}
+		
+		function mo_ldap_settings_style() {
+			wp_enqueue_style( 'mo_ldap_admin_settings_style', plugins_url('includes/css/style_settings.css', __FILE__));
+			wp_enqueue_style( 'mo_ldap_admin_settings_phone_style', plugins_url('includes/css/phone.css', __FILE__));
+		}
+
+		function mo_ldap_settings_script() {
+			wp_enqueue_script( 'mo_ldap_admin_settings_phone_script', plugins_url('includes/js/phone.js', __FILE__ ));
+			wp_enqueue_script( 'mo_ldap_admin_settings_script', plugins_url('includes/js/settings_page.js', __FILE__ ), array('jquery'));
+		}
+		
+		function success_message() {
+			$class = "error";
+			$message = get_option('mo_ldap_message');
+			echo "<div class='" . $class . "'> <p>" . $message . "</p></div>"; 
+		}
+		
+		function error_message() {
+			$class = "updated";
+			$message = get_option('mo_ldap_message');
+			echo "<div class='" . $class . "'> <p>" . $message . "</p></div>"; 
 		}
 		
 		private function show_success_message() {
@@ -180,112 +406,6 @@
 		private function show_error_message() {
 			remove_action( 'admin_notices', array( $this, 'error_message') );
 			add_action( 'admin_notices', array( $this, 'success_message') );
-		}
-		
-		function wp_ldap_login_widget_options(){
-			
-			$gateway_url = get_option("mo_ldap_gateway_url");
-			$enable_ldap_login = get_option("mo_ldap_enable_ldap_login");
-			$customer_id = get_option("mo_ldap_customer_id");
-			$api_key = get_option("mo_ldap_api_key");
-			$token_key = get_option("mo_ldap_token_key");
-			$secret_key = get_option("mo_ldap_secret_key");
-			?>
-			<h2>miniOrange LDAP Login</h2>
-			<form name="gateway_config_form" method="post" action="">
-				<input type="hidden" name="option" value="login_widget_save_options" />
-				<table width="98%" border="0" style="background-color:#FFFFFF; border:1px solid #CCCCCC; padding:0px 0px 0px 10px; margin:2px;">
-				   <tr>
-					<td width="45%"><h3>miniOrange LDAP Gateway Configuration</h3></td>
-					<td width="55%">&nbsp;</td>
-				  </tr>
-				   <tr>
-					<td><input type="checkbox" name="enable_ldap_login" value="1" <?php checked($enable_ldap_login == 1);?> /><strong>Enable LDAP login</strong></td>
-					<td>&nbsp;</td>
-				  </tr>
-				   <tr>
-					<td><strong>Enter miniOrange LDAP Gateway URL:</strong></td>
-					<td><input type="url" name="gateway_url" style="width:50%;" value="<?php echo $gateway_url;?>" required /></td>
-				  </tr>
-				  <tr>
-					<td><strong>Enter miniOrange LDAP Key:</strong></td>
-					<td><input type="text" name="mo_ldap_secret_key" style="width:50%;" value="<?php echo $secret_key;?>" required /></td>
-				  </tr>
-				  <tr>
-					<td colspan="2"></td>
-				  </tr>
-				  <tr>
-					<td>&nbsp;</td>
-					<td><br><input type="submit" name="submit" value="Save Gateway Configuration" class="button button-primary button-large" /></td>
-				  </tr>
-				  <tr>
-						<td colspan="2"> 
-						<p>
-							<strong>Instructions:</strong>
-							<ol>
-								<li>The URL denotes where the miniOrange Gateway resides. The server where the gateway is hosted needs to be accessible from your WordPress instance. Ensure that appropriate firewall rules are in place</li>
-								<li>LDAP Configuration is done in the miniOrange Gateway. The following information is required in order to configure connection to the LDAP Server</li>
-								<li><ul>
-									<li>a. LDAP Connection String -> Connection string for the LDAP Server. eg: ldap://myldapserver.domain:port</li>
-									<li>b. Service Account Distinguished Name(DN). eg: cn=admin,dc=domain,dc=com</li>
-									<li>c. Server Account Password</li>
-									<li>d. DistinguishedName Attribute (DN Attribute) -> attribute in LDAP which stores unique DN value. eg: distinguishedName in AD, entryDN in OpenLDAP</li>
-									<li>e. SearchBase -> Define where users logging in will be located in the LDAP Environment</li>
-									<li>f. Search Filter -> It is a basic LDAP Query for searching of user based on mapping of username to a particular attribute. eg: <b>(&(objectClass=*)(cn=?))</b></li>
-									<!-- TO DO ATFER MARKETING PAGE IS UP
-									li>Include instructions to add link and configure SAML app in marketing page. Add a link from here</li-->
-								</ul>
-								</li>
-								<li><b>Please email us at info@miniorange.com for configuration of miniOrange Gateway. Also mention the information given above.</b></li>
-						</p>
-						</td>
-					</tr>
-				</table>
-				</form>
-				<form name="sso_config_form" method="post" action="">
-				  <input type="hidden" name="option" value="sso_config_options" />
-				  <table width="98%" border="0" style="background-color:#FFFFFF; border:1px solid #CCCCCC; padding:0px 0px 0px 10px; margin:2px;">
-				  <tr>
-					<td width="45%"><h3>SSO Configuration</h3></td>
-					<td width="55%">&nbsp;</td>
-				  </tr>
-				  <tr>
-					<td colspan="2">If you want to enable access to SAML-enabled cloud apps through miniOrange, configure the following details.</td>
-				  </tr>
-				  <tr>
-					<td><strong>Enter miniOrange Customer Key:</strong></td>
-					<td><input type="text" name="customer_id" style="width:50%;" value="<?php echo $customer_id;?>" required /></td>
-				  </tr>
-				  <tr>
-					<td><strong>Enter miniOrange Customer API Key:</strong></td>
-					<td><input type="text" name="api_key" style="width:50%;" value="<?php echo $api_key;?>" required /></td>
-				  </tr>
-				  <tr>
-					<td><strong>Enter miniOrange Customer Token Key:</strong></td>
-					<td><input type="text" name="token_key" style="width:50%;" value="<?php echo $token_key;?>" required /></td>
-				  </tr>
-				  <tr>
-					<td>&nbsp;</td>
-					<td><br><input type="submit" name="submit" value="Save SSO Configuration" class="button button-primary button-large" /></td>
-				  </tr>
-					<tr>
-						<td colspan="2"> 
-						<p>
-							<strong>Instructions:</strong>
-							<ol>
-								<li>Login to your <a href="https://auth.miniorange.com/moas">miniOrange</a> account</li>
-								<li>Go to <i>Integrations->Custom App Integration</i> from the menu</li>
-								<li>Copy the Customer Key, Customer API Key and Customer Token Key to the above textboxes and click on Save.</li>
-								<li>To add an app, create a link anywhere on your Wordpress site with the following URL: <b>##wordpress_site_url##</b>/index.php?app_name=<b>##APP_NAME##</b> where APP_NAME corresponds to Application Provider Name of app in miniOrange.</li>
-								<li>If you face any issue, email us at info@miniorange.com</li>
-							</ol>
-						</p>
-						</td>
-					</tr>
-				</table>
-			</form>
-		<?php
-			
 		}
 		
 		function plugin_query_vars($vars) {
@@ -301,7 +421,30 @@
 			}
 		}
 		
+		public function mo_ldap_deactivate() {
+			//delete all stored key-value pairs
+			//delete_option('mo_ldap_admin_email');
+			delete_option('mo_ldap_host_name');
+			delete_option('mo_ldap_default_config');
+			delete_option('mo_ldap_password');
+			delete_option('mo_ldap_new_registration');
+			delete_option('mo_ldap_admin_phone');
+			delete_option('mo_ldap_verify_customer');
+			delete_option('mo_ldap_admin_customer_key');
+			delete_option('mo_ldap_admin_api_key');
+			delete_option('mo_ldap_customer_token');
+			delete_option('mo_ldap_message');
+			
+			delete_option('mo_ldap_enable_ldap_login');
+			delete_option('mo_ldap_server_url');
+			delete_option('mo_ldap_server_dn');
+			delete_option('mo_ldap_server_password');
+			delete_option('mo_ldap_dn_attribute');
+			delete_option('mo_ldap_search_base');
+			delete_option('mo_ldap_search_filter');
+			
+		}
 	}
 	
-	new wp_ldap_login;
+	new Mo_Ldap_Login;
 ?>

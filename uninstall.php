@@ -1,0 +1,21 @@
+<?php
+	delete_option('mo_ldap_admin_email');
+	delete_option('mo_ldap_host_name');
+	delete_option('mo_ldap_default_config');
+	delete_option('mo_ldap_password');
+	delete_option('mo_ldap_new_registration');
+	delete_option('mo_ldap_admin_phone');
+	delete_option('mo_ldap_verify_customer');
+	delete_option('mo_ldap_admin_customer_key');
+	delete_option('mo_ldap_admin_api_key');
+	delete_option('mo_ldap_customer_token');
+	delete_option('mo_ldap_message');
+	
+	delete_option('mo_ldap_enable_ldap_login');
+	delete_option('mo_ldap_server_url');
+	delete_option('mo_ldap_server_dn');
+	delete_option('mo_ldap_server_password');
+	delete_option('mo_ldap_dn_attribute');
+	delete_option('mo_ldap_search_base');
+	delete_option('mo_ldap_search_filter');
+?>

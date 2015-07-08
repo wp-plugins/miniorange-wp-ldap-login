@@ -1,0 +1,64 @@
+.mo_ldap_table_layout {
+	background-color:#FFFFFF; 
+	border:1px solid #CCCCCC; 
+	padding:0px 24px 10px 20px;
+	min-height:360px;
+}
+.mo_ldap_small_layout{
+	background-color:#FFFFFF; 
+	border:1px solid #CCCCCC; 
+	padding:20px 24px 10px 20px;
+	margin-top: 20px;
+}
+.mo_ldap_container{
+	padding:10px;
+}
+.mo_ldap_support_layout{
+	width: 93%;
+	background-color:#FFFFFF; 
+	border:1px solid #CCCCCC; 
+	padding-left:3%;
+	padding-right:3%;
+}
+
+.mo_ldap_table_layout td strong {
+	margin-left: 10px;
+}
+.col1 {
+	width: 20%;
+}
+.mo_ldap_left {
+	overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+}
+.mo_ldap_right {
+	float: right !important;
+}
+#panel1{
+	width: 100%;
+}
+.fixed {
+	width: 75% !important;
+}
+.mo_ldap_table_textbox {
+	width:100%;
+	border-radius:4px;
+	height:30px;
+}
+.mo_ldap_settings_table {
+	width: 100%;
+}
+
+#mo_ldap_note{
+	background-color: #d9edf7;
+	border-radius: 4px;
+	padding: 5px;
+	color: #31708f;
+}
+.button-green{
+	background: #95D387 !important;
+	color: #ffffff !important;
+	border: 1px solid #95D387 !important;
+}
