@@ -232,11 +232,11 @@
 						}
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
 						$this->delete_ldap_configuration();
-						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Your configuration has not been saved.');
+						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Please make sure your firewall is open - click on troubleshooting to know more. Your configuration has not been saved.');
 						$this->show_error_message();
 					} else {
 						$this->delete_ldap_configuration();
-						update_option( 'mo_ldap_message', 'There was an error. Your configuration has not been saved.');
+						update_option( 'mo_ldap_message', 'There was an error. Please make sure your firewall is open - click on troubleshooting to know more. Your configuration has not been saved.');
 						$this->show_error_message();
 					}
 				}
