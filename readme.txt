@@ -38,11 +38,13 @@ Please email us at info@miniorange.com or <a href="http://miniorange.com/contact
 2. Unzip and upload the `miniorange-wp-ldap-login` directory to your `/wp-content/plugins/` directory.
 3. Activate miniOrange LDAP Login from your Plugins page.
 
-= Plugin installation =
+= Once Activated =
 1. Upload `miniorange-wp-ldap-login.zip` to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the `Plugins` menu in WordPress.
 3. Go to `Settings-> LDAP Login Config`, and follow the instructions.
 4. Click on `Save`
+
+Make sure that if there is a firewall, you `OPEN THE FIREWALL` to allow incoming requests to your LDAP. Please open port 389(636 for SSL or ldaps). Host - 52.6.168.155 , 52.6.204.243 - This is the host from where the LDAP connection as well as authentication requests are going to be made.
 
 == Frequently Asked Questions ==
 
