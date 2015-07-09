@@ -4,7 +4,7 @@
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 2.0.1
+    Version: 2.0.2
     Author URI: http://miniorange.com
     */
 	
@@ -277,10 +277,10 @@
 						update_option( 'mo_ldap_message', 'Test is successful! Your credentials have matched.');
 						$this->show_success_message();
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
-						update_option( 'mo_ldap_message', $response['statusMessage']);
+						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
 						$this->show_error_message();
 					} else {
-						update_option( 'mo_ldap_message', 'There was an error processing your request.');
+						update_option( 'mo_ldap_message', 'There was an error processing your request. Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
 						$this->show_error_message();
 					}		
 				}
@@ -299,10 +299,10 @@
 						update_option( 'mo_ldap_message', 'Authenticated successfully.');
 						$this->show_success_message();
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
-						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
+						update_option( 'mo_ldap_message', $response['statusMessage']);
 						$this->show_error_message();
 					} else {
-						update_option( 'mo_ldap_message', 'There was an error processing your request. Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
+						update_option( 'mo_ldap_message', 'There was an error processing your request.');
 						$this->show_error_message();
 					}
 				}

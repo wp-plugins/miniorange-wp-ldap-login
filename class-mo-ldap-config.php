@@ -34,7 +34,7 @@ class Mo_Ldap_Config{
 		$encrypted_password = Mo_Ldap_Util::encrypt($password);
 		
 		//send post request to gateway url
-		$data = $this->get_login_config($encrypted_username, $encrypted_password, 'User Login through LDAP', null);
+		$data = $this->get_login_config($encrypted_username, $username, $encrypted_password, 'User Login through LDAP', null);
 		$data_string = json_encode($data);
 		$curl = curl_init();
 		
@@ -173,7 +173,7 @@ class Mo_Ldap_Config{
 		
 		$ch = curl_init($url);
 		
-		$fields = $this->get_login_config($encrypted_username, $encrypted_password, $request_type, $is_default);
+		$fields = $this->get_login_config($encrypted_username, $username, $encrypted_password, $request_type, $is_default);
 		$field_string = json_encode($fields);
 		
 		curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
@@ -248,7 +248,7 @@ class Mo_Ldap_Config{
 		return $fields;
 	}
 	
-	function get_login_config($username, $password, $request_type) {
+	function get_login_config($encrypted_username, $username, $encrypted_password, $request_type, $is_default) {
 		global $current_user;
 		get_currentuserinfo();
 		
@@ -256,8 +256,8 @@ class Mo_Ldap_Config{
 		
 		$fields = array(
 			'customerId' => $customer_id,
-			'userName' => $username,
-			'password' => $password,
+			'userName' => $encrypted_username,
+			'password' => $encrypted_password,
 			'ldapAuditRequest' => array(
 				'endUserEmail' => $username,
 				'applicationName' => $_SERVER['SERVER_NAME'],
