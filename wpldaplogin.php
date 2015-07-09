@@ -4,7 +4,7 @@
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 2.0
+    Version: 2.0.1
     Author URI: http://miniorange.com
     */
 	
@@ -28,7 +28,7 @@
 			add_filter('query_vars', array($this, 'plugin_query_vars'));
 			register_deactivation_hook(__FILE__, array( $this, 'mo_ldap_deactivate'));
 			add_action( 'login_footer', 'mo_ldap_link' );
-			if(get_option('mo_ldap_enable_ldap_login') == 1){
+			if(get_option('mo_ldap_enable_login') == 1){
 				remove_filter('authenticate', 'wp_authenticate_username_password', 20, 3);
 				add_filter('authenticate', array($this, 'ldap_login'), 20, 3);
 			}
@@ -170,8 +170,8 @@
 					update_option('mo_ldap_password', '');
 				}
 				else if( $_POST['option'] == "mo_ldap_enable" ) {		//enable ldap login
-					update_option( 'mo_ldap_enable_ldap_login', isset($_POST['enable_ldap_login']) ? $_POST['enable_ldap_login'] : 0);
-					if(get_option('mo_ldap_enable_ldap_login')) {
+					update_option( 'mo_ldap_enable_login', isset($_POST['enable_ldap_login']) ? $_POST['enable_ldap_login'] : 0);
+					if(get_option('mo_ldap_enable_login')) {
 						update_option( 'mo_ldap_message', 'Login through your LDAP has been enabled.');
 						$this->show_success_message();
 					} else {
@@ -299,10 +299,10 @@
 						update_option( 'mo_ldap_message', 'Authenticated successfully.');
 						$this->show_success_message();
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
-						update_option( 'mo_ldap_message', $response['statusMessage']);
+						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
 						$this->show_error_message();
 					} else {
-						update_option( 'mo_ldap_message', 'There was an error processing your request.');
+						update_option( 'mo_ldap_message', 'There was an error processing your request. Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
 						$this->show_error_message();
 					}
 				}
@@ -435,7 +435,7 @@
 			delete_option('mo_ldap_customer_token');
 			delete_option('mo_ldap_message');
 			
-			delete_option('mo_ldap_enable_ldap_login');
+			delete_option('mo_ldap_enable_login');
 			delete_option('mo_ldap_server_url');
 			delete_option('mo_ldap_server_dn');
 			delete_option('mo_ldap_server_password');

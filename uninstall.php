@@ -11,7 +11,7 @@
 	delete_option('mo_ldap_customer_token');
 	delete_option('mo_ldap_message');
 	
-	delete_option('mo_ldap_enable_ldap_login');
+	delete_option('mo_ldap_enable_login');
 	delete_option('mo_ldap_server_url');
 	delete_option('mo_ldap_server_dn');
 	delete_option('mo_ldap_server_password');

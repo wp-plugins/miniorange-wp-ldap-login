@@ -268,27 +268,4 @@ class Mo_Ldap_Config{
 		
 		return $fields;
 	}
-	
-	function success_message() {
-		$class = "error";
-		$message = get_option('mo_ldap_message');
-		echo "<div class='" . $class . "'> <p>" . $message . "</p></div>"; 
-	}
-	
-	function error_message() {
-		$class = "updated";
-		$message = get_option('mo_ldap_message');
-		echo "<div class='" . $class . "'> <p>" . $message . "</p></div>"; 
-	}
-	
-	private function show_success_message() {
-		remove_action( 'admin_notices', array( $this, 'success_message') );
-		add_action( 'admin_notices', array( $this, 'error_message') );
-	}
-	
-	private function show_error_message() {
-		remove_action( 'admin_notices', array( $this, 'error_message') );
-		add_action( 'admin_notices', array( $this, 'success_message') );
-	}
-
 }?>

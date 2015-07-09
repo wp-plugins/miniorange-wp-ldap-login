@@ -164,7 +164,7 @@ function mo_ldap_configuration_page(){
 			<form name="f" id="enable_login_form" method="post" action="">
 				<input type="hidden" name="option" value="mo_ldap_enable" />
 				<h3>Enable login using LDAP</h3>
-				<input type="checkbox" id="enable_ldap_login" name="enable_ldap_login" value="1" <?php checked(get_option('mo_ldap_enable_ldap_login') == 1);?> />Enable LDAP login
+				<input type="checkbox" id="enable_ldap_login" name="enable_ldap_login" value="1" <?php checked(get_option('mo_ldap_enable_login') == 1);?> />Enable LDAP login
 				<p>Enabling LDAP login will protect your login page by your configured LDAP. <b>Please check this only after you have successfully tested your configuration</b> as the default WordPress login will stop working.</p>
 			</form>
 			<script>
@@ -301,8 +301,8 @@ function mo_ldap_configuration_page(){
 							<p>
 								<strong>User is not getting authenticated? Check the following:</strong>
 								<ol>
-									<li>The username-password you are entering are incorrect.</li>
-									<li>The user is not present in the search bases you have specified against <b>SearchBase(s)</b> above.</li>
+									<li>The username-password you are entering is correct.</li>
+									<li>The user is present in the search bases you have specified against <b>SearchBase(s)</b> above.</li>
 								</ol>
 							</p>
 						</td>
