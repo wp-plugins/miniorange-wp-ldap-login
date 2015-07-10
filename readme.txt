@@ -4,7 +4,7 @@ Donate link: http://miniorange.com
 Tags:ldap, AD, ldap login, ldap sso, AD sso, ldap authentication, AD authentication, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on, active directory, openldap login, login form, user login, authentication, login, WordPress login
 Requires at least: 2.0.2
 Tested up to: 4.2.1
-Stable tag: 2.2.3
+Stable tag: 2.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,9 +57,10 @@ Make sure that if there is a firewall, you `OPEN THE FIREWALL` to allow incoming
 = I am locked out of my account and can't login with either my WordPress credentials or LDAP credentials. What should I do? =
 Firstly, please check if the `user you are trying to login with` exists in your WordPress. To unlock yourself, rename miniorange-wp-ldap-login plugin name. You will be able to login with your WordPress credentials. After logging in, rename the plugin back to miniorange-wp-ldap-login. If the problem persists, `activate, deactivate and again activate` the plugin.
 
-
 = For support or troubleshooting help =
 Please email us at info@miniorange.com or <a href="http://miniorange.com/contact" target="_blank">Contact us</a>.
+
+We can add the provision of user management such as creating users not present in WordPress from LDAP Server, adding users, editing users and so on. For further details, please email us at info@miniorange.com or <a href="http://miniorange.com/contact" target="_blank">Contact us</a>.
 
 == Screenshots ==
 
@@ -67,6 +68,9 @@ Please email us at info@miniorange.com or <a href="http://miniorange.com/contact
 2. Test demo LDAP plugin
 
 == Changelog ==
+
+= 2.1 =
+Bug fixes and added user verfication
 
 = 2.0.2 =
 Usability fixes
@@ -81,6 +85,9 @@ LDAP usability fixes
 * this is the first release.
 
 == Upgrade Notice ==
+
+= 2.1 =
+Bug fixes and added user verfication
 
 = 2.0.2 =
 Usability fixes

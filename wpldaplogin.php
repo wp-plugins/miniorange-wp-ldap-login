@@ -4,7 +4,7 @@
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 2.0.2
+    Version: 2.1
     Author URI: http://miniorange.com
     */
 	
@@ -64,7 +64,9 @@
 				exit;
 						
 			} else {
-				//return $error;
+				$error = new WP_Error();
+				$error->add('incorrect_credentials', __('<strong>ERROR</strong>: Invalid username or incorrect password. Please try again.'));
+				return $error;
 			}
 		}
 	
@@ -116,30 +118,43 @@
 					update_option( 'mo_ldap_admin_email', $email );
 					update_option( 'mo_ldap_admin_phone', $phone );
 					
-					if(strcmp($password, $confirmPassword) == 0) {
+					if( strcmp( $password, $confirmPassword) == 0 ) {
 						update_option( 'mo_ldap_password', $password );
+
 						$customer = new Mo_Ldap_Customer();
-						$customerKey = json_decode($customer->create_customer(), true);
-						if(strcasecmp($customerKey['status'], 'CUSTOMER_USERNAME_ALREADY_EXISTS') == 0) {	//admin already exists in miniOrange
+						$content = json_decode($customer->check_customer(), true);
+						if( strcasecmp( $content['status'], 'CUSTOMER_NOT_FOUND') == 0 ){
+							$content = json_decode($customer->send_otp_token(), true);
+							if(strcasecmp($content['status'], 'SUCCESS') == 0) {
+								update_option( 'mo_ldap_message', ' A one time passcode is sent to ' . get_option('mo_ldap_admin_email') . '. Please enter the otp here to verify your email.');
+								update_option('mo_ldap_transactionId',$content['txId']);
+								update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_SUCCESS');
+
+								$this->show_success_message();
+							}else{
+								update_option('mo_ldap_message','There was an error in sending email. Please click on Resend OTP to try again.');
+								update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_FAILURE');
+								$this->show_error_message();
+							}
+						} else{
 							$content = $customer->get_customer_key();
 							$customerKey = json_decode($content, true);
 							if(json_last_error() == JSON_ERROR_NONE) {
 								$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Your account has been retrieved successfully.');
+								update_option('mo_ldap_password', '');
 							} else {
 								update_option( 'mo_ldap_message', 'You already have an account with miniOrange. Please enter a valid password.');
 								update_option('mo_ldap_verify_customer', 'true');
 								delete_option('mo_ldap_new_registration');
 								$this->show_error_message();
 							}
-						} else if(strcasecmp($customerKey['status'], 'SUCCESS') == 0) { 	//registration successful
-							$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Registration complete!');
 						}
+
 					} else {
 						update_option( 'mo_ldap_message', 'Password and Confirm password do not match.');
-						delete_option('verify_customer');
+						delete_option('mo_ldap_verify_customer');
 						$this->show_error_message();
 					}
-					update_option('mo_ldap_password', '');
 				} 
 				else if( $_POST['option'] == "mo_ldap_verify_customer" ) {	//login the admin to miniOrange
 			
@@ -163,6 +178,7 @@
 					if( json_last_error() == JSON_ERROR_NONE ) {
 						update_option( 'mo_ldap_admin_phone', $customerKey['phone'] );
 						$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Your account has been retrieved successfully.');
+						update_option('mo_ldap_password', '');
 					} else {
 						update_option( 'mo_ldap_message', 'Invalid username or password. Please try again.');
 						$this->show_error_message();		
@@ -347,6 +363,59 @@
 
 					}
 				}
+				else if( $_POST['option'] == "mo_ldap_resend_otp" ) {			//send OTP to user to verify email
+					$customer = new Mo_Ldap_Customer();
+					$content = json_decode($customer->send_otp_token(), true);
+					if(strcasecmp($content['status'], 'SUCCESS') == 0) {
+							update_option( 'mo_ldap_message', ' A one time passcode is sent to ' . get_option('mo_ldap_admin_email') . ' again. Please enter the OTP recieved.');
+							update_option('mo_ldap_transactionId',$content['txId']);
+							update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_SUCCESS');
+							$this->show_success_message();
+					}else{
+							update_option('mo_ldap_message','There was an error in sending email. Please click on Resend OTP to try again.');
+							update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_FAILURE');
+							$this->show_error_message();
+					}
+				}
+				else if( $_POST['option'] == "mo_ldap_validate_otp"){		//verify OTP entered by user
+
+					//validation and sanitization
+					$otp_token = '';
+					if( Mo_Ldap_Util::check_empty_or_null( $_POST['otp_token'] ) ) {
+						update_option( 'mo_ldap_message', 'Please enter a value in otp field.');
+						update_option('mo_ldap_registration_status','MO_OTP_VALIDATION_FAILURE');
+						$this->show_error_message();
+						return;
+					} else{
+						$otp_token = sanitize_text_field( $_POST['otp_token'] );
+					}
+
+					$customer = new Mo_Ldap_Customer();
+					$content = json_decode($customer->validate_otp_token(get_option('mo_ldap_transactionId'), $otp_token ),true);
+					if(strcasecmp($content['status'], 'SUCCESS') == 0) {
+						$customer = new Mo_Ldap_Customer();
+						$customerKey = json_decode($customer->create_customer(), true);
+						if(strcasecmp($customerKey['status'], 'CUSTOMER_USERNAME_ALREADY_EXISTS') == 0) {	//admin already exists in miniOrange
+							$content = $customer->get_customer_key();
+							$customerKey = json_decode($content, true);
+							if(json_last_error() == JSON_ERROR_NONE) {
+								$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Your account has been retrieved successfully.');
+							} else {
+								update_option( 'mo_ldap_message', 'You already have an account with miniOrange. Please enter a valid password.');
+								update_option('mo_ldap_verify_customer', 'true');
+								delete_option('mo_ldap_new_registration');
+								$this->show_error_message();
+							}
+						} else if(strcasecmp($customerKey['status'], 'SUCCESS') == 0) { 	//registration successful
+							$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Registration complete!');
+						}
+						update_option('mo_ldap_password', '');
+					}else{
+						update_option( 'mo_ldap_message','Invalid one time passcode. Please enter a valid otp.');
+						update_option('mo_ldap_registration_status','MO_OTP_VALIDATION_FAILURE');
+						$this->show_error_message();
+					}
+				}
 			}
 		}
 		
@@ -361,6 +430,7 @@
 			update_option( 'mo_ldap_message', $message);
 			delete_option('mo_ldap_verify_customer');
 			delete_option('mo_ldap_new_registration');
+			delete_option('mo_ldap_registration_status');
 			$this->show_success_message();
 		}
 		
@@ -423,7 +493,9 @@
 		
 		public function mo_ldap_deactivate() {
 			//delete all stored key-value pairs
-			//delete_option('mo_ldap_admin_email');
+			if( !Mo_Ldap_Util::check_empty_or_null( get_option('mo_ldap_registration_status') ) ) {
+				delete_option('mo_ldap_admin_email');
+			}
 			delete_option('mo_ldap_host_name');
 			delete_option('mo_ldap_default_config');
 			delete_option('mo_ldap_password');
@@ -443,6 +515,7 @@
 			delete_option('mo_ldap_search_base');
 			delete_option('mo_ldap_search_filter');
 			
+			delete_option('mo_ldap_transactionId');
 		}
 	}
 	

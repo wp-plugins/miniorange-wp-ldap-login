@@ -23,7 +23,9 @@ function mo_ldap_settings() {
 									mo_ldap_login_page();
 								} else if (trim ( get_option ( 'mo_ldap_admin_email' ) ) != '' && trim ( get_option ( 'mo_ldap_admin_api_key' ) ) == '' && get_option ( 'mo_ldap_new_registration' ) != 'true') {
 									mo_ldap_login_page();
-								} else if (! Mo_Ldap_Util::is_customer_registered()) {
+								} else if(get_option('mo_ldap_registration_status') == 'MO_OTP_DELIVERED_SUCCESS' || get_option('mo_ldap_registration_status') == 'MO_OTP_VALIDATION_FAILURE' || get_option('mo_openid_registration_status') == 'MO_OTP_DELIVERED_FAILURE'){
+									mo_ldap_show_otp_verification();
+								}else if (! Mo_Ldap_Util::is_customer_registered()) {
 									delete_option ( 'mo_ldap_password_mismatch' );
 									mo_ldap_registration_page();
 								} else {
@@ -52,8 +54,8 @@ function mo_ldap_registration_page(){
 <!--Register with miniOrange-->
 <form name="f" method="post" action="">
 	<input type="hidden" name="option" value="mo_ldap_register_customer" />
-	<p>Just complete the short registration below to configure your own LDAP Server. Or you can test using our LDAP Server.</p>
-	<div class="mo_ldap_table_layout" style="min-height: 312px;">
+	<p>Just complete the short registration below to configure your own LDAP Server. Or you can test using our LDAP Server. Please enter a valid email address and phone number.</p>
+	<div class="mo_ldap_table_layout" style="min-height: 294px;">
 		<h3>Register with miniOrange</h3>
 		<div id="panel1">
 			<table class="mo_ldap_settings_table">
@@ -387,5 +389,39 @@ function mo_ldap_default_config_page() {
 }
 /* End of Test Default Configuration*/
 
+/* Show OTP verification page*/
+function mo_ldap_show_otp_verification(){
+	?>
+		<div class="mo_ldap_table_layout">
+			<div id="panel2">
+				<table class="mo_ldap_settings_table">
+		<!-- Enter otp -->
+					<form name="f" method="post" id="ldap_form" action="">
+						<input type="hidden" name="option" value="mo_ldap_validate_otp" />
+						<h3>Verify Your Email</h3>
+						<tr>
+							<td><b><font color="#FF0000">*</font>Enter OTP:</b></td>
+							<td colspan="2"><input class="mo_ldap_table_textbox" autofocus="true" type="text" name="otp_token" required placeholder="Enter OTP" style="width:61%;" pattern="{6,8}"/>
+							 &nbsp;&nbsp;<a style="cursor:pointer;" onclick="document.getElementById('resend_otp_form').submit();">Resend OTP</a></td>
+						</tr>
+						<tr><td colspan="3"></td></tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td>
+							<input type="submit" name="submit" value="Validate OTP" class="button button-primary button-large" /></td>
+
+					</form>
+					<form name="f" id="resend_otp_form" method="post" action="">
+							<td>
+							<input type="hidden" name="option" value="mo_ldap_resend_otp"/>
+							</td>
+						</tr>
+					</form>
+				</table>
+			</div>
+		</div>
+<?php
+}
+/* End Show OTP verification page*/
 
 ?>
