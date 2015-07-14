@@ -4,7 +4,7 @@
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 2.1
+    Version: 2.1.1
     Author URI: http://miniorange.com
     */
 	
@@ -63,6 +63,10 @@
 				wp_redirect( site_url() );
 				exit;
 						
+			} else if($status == 'CURL_ERROR'){
+				$error = new WP_Error();
+				$error->add('curl_error', __('<strong>ERROR</strong>: <a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+				return $error;
 			} else {
 				$error = new WP_Error();
 				$error->add('incorrect_credentials', __('<strong>ERROR</strong>: Invalid username or incorrect password. Please try again.'));
@@ -131,11 +135,15 @@
 								update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_SUCCESS');
 
 								$this->show_success_message();
-							}else{
+							} else {
 								update_option('mo_ldap_message','There was an error in sending email. Please click on Resend OTP to try again.');
 								update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_FAILURE');
 								$this->show_error_message();
 							}
+						} else if( strcasecmp( $content['status'], 'CURL_ERROR') == 0 ){
+							update_option('mo_ldap_message', $content['statusMessage']);
+							update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_FAILURE');
+							$this->show_error_message();
 						} else{
 							$content = $customer->get_customer_key();
 							$customerKey = json_decode($content, true);
@@ -175,7 +183,10 @@
 					$customer = new Mo_Ldap_Customer();
 					$content = $customer->get_customer_key();
 					$customerKey = json_decode( $content, true );
-					if( json_last_error() == JSON_ERROR_NONE ) {
+					if( strcasecmp( $customerKey['apiKey'], 'CURL_ERROR') == 0) {
+						update_option('mo_ldap_message', $customerKey['token']);
+						$this->show_error_message();
+					} else if( json_last_error() == JSON_ERROR_NONE ) {
 						update_option( 'mo_ldap_admin_phone', $customerKey['phone'] );
 						$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Your account has been retrieved successfully.');
 						update_option('mo_ldap_password', '');
@@ -243,12 +254,17 @@
 							update_option( 'mo_ldap_message', 'Connection was established successfully but an error occured. ' . $save_response['statusMessage']);
 							$this->show_error_message();
 						} else {
+							$this->delete_ldap_configuration();
 							update_option( 'mo_ldap_message', 'Connection was established successfully but an error occured.');
 							$this->show_error_message();
 						}
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
 						$this->delete_ldap_configuration();
 						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Please make sure your firewall is open - click on troubleshooting to know more. Your configuration has not been saved.');
+						$this->show_error_message();
+					} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
+						$this->delete_ldap_configuration();
+						update_option('mo_ldap_message', $response['statusMessage']);
 						$this->show_error_message();
 					} else {
 						$this->delete_ldap_configuration();
@@ -295,6 +311,9 @@
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
 						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
 						$this->show_error_message();
+					} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
+						update_option('mo_ldap_message', $response['statusMessage']);
+						$this->show_error_message();
 					} else {
 						update_option( 'mo_ldap_message', 'There was an error processing your request. Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
 						$this->show_error_message();
@@ -317,6 +336,9 @@
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
 						update_option( 'mo_ldap_message', $response['statusMessage']);
 						$this->show_error_message();
+					} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
+						update_option('mo_ldap_message', $response['statusMessage']);
+						$this->show_error_message();
 					} else {
 						update_option( 'mo_ldap_message', 'There was an error processing your request.');
 						$this->show_error_message();
@@ -333,6 +355,9 @@
 						$this->show_success_message();
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
 						update_option( 'mo_ldap_message', $response['statusMessage']);
+						$this->show_error_message();
+					} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
+						update_option('mo_ldap_message', $response['statusMessage']);
 						$this->show_error_message();
 					} else {
 						update_option( 'mo_ldap_message', 'There was an error processing your request.');
@@ -351,7 +376,11 @@
 						$phone = sanitize_text_field( $_POST['query_phone'] );
 						$contact_us = new Mo_Ldap_Customer();
 						$submited = json_decode($contact_us->submit_contact_us($email, $phone, $query),true);
-						if(json_last_error() == JSON_ERROR_NONE) {
+						
+						if( strcasecmp( $submited['status'], 'CURL_ERROR') == 0) {
+							update_option('mo_ldap_message', $submited['statusMessage']);
+							$this->show_error_message();
+						} else if(json_last_error() == JSON_ERROR_NONE) {
 							if ( $submited == false ) {
 								update_option('mo_ldap_message', 'Your query could not be submitted. Please try again.');
 								$this->show_error_message();
@@ -371,7 +400,11 @@
 							update_option('mo_ldap_transactionId',$content['txId']);
 							update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_SUCCESS');
 							$this->show_success_message();
-					}else{
+					} else if( strcasecmp( $content['status'], 'CURL_ERROR') == 0) {
+						update_option('mo_ldap_message', $content['statusMessage']);
+						update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_FAILURE');
+						$this->show_error_message();
+					} else{
 							update_option('mo_ldap_message','There was an error in sending email. Please click on Resend OTP to try again.');
 							update_option('mo_ldap_registration_status','MO_OTP_DELIVERED_FAILURE');
 							$this->show_error_message();
@@ -410,7 +443,11 @@
 							$this->save_success_customer_config($customerKey['id'], $customerKey['apiKey'], $customerKey['token'], 'Registration complete!');
 						}
 						update_option('mo_ldap_password', '');
-					}else{
+					} else if( strcasecmp( $content['status'], 'CURL_ERROR') == 0) {
+						update_option('mo_ldap_message', $content['statusMessage']);
+						update_option('mo_ldap_registration_status','MO_OTP_VALIDATION_FAILURE');
+						$this->show_error_message();
+					} else{
 						update_option( 'mo_ldap_message','Invalid one time passcode. Please enter a valid otp.');
 						update_option('mo_ldap_registration_status','MO_OTP_VALIDATION_FAILURE');
 						$this->show_error_message();
@@ -496,6 +533,7 @@
 			if( !Mo_Ldap_Util::check_empty_or_null( get_option('mo_ldap_registration_status') ) ) {
 				delete_option('mo_ldap_admin_email');
 			}
+			
 			delete_option('mo_ldap_host_name');
 			delete_option('mo_ldap_default_config');
 			delete_option('mo_ldap_password');
@@ -516,6 +554,7 @@
 			delete_option('mo_ldap_search_filter');
 			
 			delete_option('mo_ldap_transactionId');
+			delete_option('mo_ldap_registration_status');
 		}
 	}
 	

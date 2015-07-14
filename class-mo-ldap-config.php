@@ -25,6 +25,10 @@ Contains Request Calls to LDAP Service.
 class Mo_Ldap_Config{
 	
 	function ldap_login($username, $password) {
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return 'CURL_ERROR';
+		}
+		
 		$url = get_option('mo_ldap_host_name')  . "/moas/api/ldap/authenticate";
 		global $post;
 		//Send cURL request to gateway url and parse response
@@ -64,6 +68,10 @@ class Mo_Ldap_Config{
 	}
 	
 	function save_ldap_config(){
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("statusCode"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
 		$url = get_option('mo_ldap_host_name') . '/moas/api/ldap/update-config';
 		$ch = curl_init($url);
 		
@@ -104,6 +112,10 @@ class Mo_Ldap_Config{
 	*	Test connection for default config or user config
 	*/
 	function test_connection($is_default) {
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("statusCode"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
 		$url = '';
 		$request_type = '';
 		
@@ -155,6 +167,10 @@ class Mo_Ldap_Config{
 	*	Test authentication for default config or user config
 	*/
 	function test_authentication($username, $password, $is_default) {
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("statusCode"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
 		$url = '';
 		$request_type = '';
 		

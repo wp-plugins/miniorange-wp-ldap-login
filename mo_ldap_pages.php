@@ -9,6 +9,13 @@ function mo_ldap_settings() {
 	}
 	?>
 	<h2>miniOrange LDAP Login</h2>
+	<?php
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			?>
+			<p><font color="#FF0000">(Warning: <a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled)</font></p>
+			<?php
+		}
+	?>
 	<div class="mo2f_container">
 		<h2 class="nav-tab-wrapper">
 			<a class="nav-tab <?php echo $active_tab == 'default' ? 'nav-tab-active' : ''; ?>" href="<?php echo add_query_arg( array('tab' => 'default'), $_SERVER['REQUEST_URI'] ); ?>">Test Default LDAP</a>
@@ -23,10 +30,9 @@ function mo_ldap_settings() {
 									mo_ldap_login_page();
 								} else if (trim ( get_option ( 'mo_ldap_admin_email' ) ) != '' && trim ( get_option ( 'mo_ldap_admin_api_key' ) ) == '' && get_option ( 'mo_ldap_new_registration' ) != 'true') {
 									mo_ldap_login_page();
-								} else if(get_option('mo_ldap_registration_status') == 'MO_OTP_DELIVERED_SUCCESS' || get_option('mo_ldap_registration_status') == 'MO_OTP_VALIDATION_FAILURE' || get_option('mo_openid_registration_status') == 'MO_OTP_DELIVERED_FAILURE'){
+								} else if(get_option('mo_ldap_registration_status') == 'MO_OTP_DELIVERED_SUCCESS' || get_option('mo_ldap_registration_status') == 'MO_OTP_VALIDATION_FAILURE' || get_option('mo_ldap_registration_status') == 'MO_OTP_DELIVERED_FAILURE'){
 									mo_ldap_show_otp_verification();
 								}else if (! Mo_Ldap_Util::is_customer_registered()) {
-									delete_option ( 'mo_ldap_password_mismatch' );
 									mo_ldap_registration_page();
 								} else {
 									mo_ldap_configuration_page();
@@ -54,8 +60,8 @@ function mo_ldap_registration_page(){
 <!--Register with miniOrange-->
 <form name="f" method="post" action="">
 	<input type="hidden" name="option" value="mo_ldap_register_customer" />
-	<p>Just complete the short registration below to configure your own LDAP Server. Or you can test using our LDAP Server. Please enter a valid email address and phone number.</p>
-	<div class="mo_ldap_table_layout" style="min-height: 294px;">
+	<p>Just complete the short registration below to configure your own LDAP Server. Or you can test using our LDAP Server. Please enter a valid email id that you have access to. You will be able to move forward after verifying an OTP that we will send to this email.</p>
+	<div class="mo_ldap_table_layout" style="min-height: 274px;">
 		<h3>Register with miniOrange</h3>
 		<div id="panel1">
 			<table class="mo_ldap_settings_table">
@@ -184,8 +190,6 @@ function mo_ldap_configuration_page(){
 				<!-- Copy default values to configuration -->
 				<p><strong style="font-size:14px;">NOTE: You will need to acquire the values for the below given fields from your LDAP Administrator.</strong></p>
 				<h3 class="mo_ldap_left">LDAP Connection Information</h3>
-				<input type="button" id="copy_default" class="button button-primary button-large mo_ldap_right" value="Copy Default Config"/>
-				
 				<div id="panel1">
 					<table class="mo_ldap_settings_table">
 						<tr>
@@ -267,15 +271,6 @@ function mo_ldap_configuration_page(){
 					</table>
 				</div>
 			</form>
-			<script>
-				jQuery('#copy_default').click(function() {
-					jQuery('#ldap_server').val('<?php echo $default_config['server_url'] ?>');
-					jQuery('#dn').val('<?php echo $default_config['service_account_dn'] ?>');
-					jQuery('#dn_attribute').val('<?php echo $default_config['dn_attribute'] ?>');
-					jQuery('#search_base').val('<?php echo $default_config['search_base'] ?>');
-					jQuery('#search_filter').val('<?php echo $default_config['search_filter'] ?>');
-				});
-			</script>
 		</div>
 		<div class="mo_ldap_small_layout">
 		<!-- Authenticate with LDAP configuration -->
@@ -326,7 +321,8 @@ function mo_ldap_default_config_page() {
 		<form name="f" method="post" action="">
 			<input type="hidden" name="option" value="mo_ldap_test_default_config" />
 
-				<p>Test with miniOrange LDAP Server default configuration. The following values state a valid format for LDAP configuration. They can be copied on <b>LDAP Configuration</b> page.</p>
+				<p>Test with miniOrange LDAP Server default configuration. </p>
+				<p><b><font color="#FF0000">NOTE:</font></b> The values given below are <b><font color="#FF0000">mock values</font></b> and do not represent the actual values through which the test is being done. They provide only an example of a valid format. If you need your own LDAP instance on cloud please contact us.</p>
 				<h3>Test Connection</h3>
 				<div id="panel1">
 					<table class="mo_ldap_settings_table">
@@ -408,7 +404,9 @@ function mo_ldap_show_otp_verification(){
 						<tr>
 							<td>&nbsp;</td>
 							<td>
-							<input type="submit" name="submit" value="Validate OTP" class="button button-primary button-large" /></td>
+							<input type="submit" name="submit" value="Validate OTP" class="button button-primary button-large" />
+							<a id="back_button" href=""class="button button-primary button-large">Cancel</a>
+							</td>
 
 					</form>
 					<form name="f" id="resend_otp_form" method="post" action="">
@@ -420,6 +418,12 @@ function mo_ldap_show_otp_verification(){
 				</table>
 			</div>
 		</div>
+		<script>
+			jQuery('#back_button').click(function() {
+				<?php update_option( 'mo_ldap_registration_status', '' );?>
+				window.location.reload();	
+			}
+		</script>
 <?php
 }
 /* End Show OTP verification page*/

@@ -32,6 +32,9 @@ class Mo_Ldap_Customer{
 	private $defaultApiKey = "fFd2XcvTGDemZvbw1bcUesNJWEqKbbUq";
 	
 	function create_customer(){
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("statusCode"=>'ERROR','statusMessage'=>$error . '. Please check your configuration. Also check troubleshooting under LDAP configuration.'));
+		}
 		$url = get_option('mo_ldap_host_name') . '/moas/rest/customer/add';
 		$ch = curl_init($url);
 		global $current_user;
@@ -78,6 +81,10 @@ class Mo_Ldap_Customer{
 	}
 	
 	function get_customer_key() {
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("apiKey"=>'CURL_ERROR','token'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
 		$url = get_option('mo_ldap_host_name') . "/moas/rest/customer/key";
 		$ch = curl_init($url);
 		$email = get_option('mo_ldap_admin_email');
@@ -114,6 +121,10 @@ class Mo_Ldap_Customer{
 	}
 	
 	function submit_contact_us( $q_email, $q_phone, $query ) {
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("status"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
 		$url = get_option('mo_ldap_host_name') . "/moas/rest/customer/contact-us";
 		$ch = curl_init($url);
 		global $current_user;
@@ -151,6 +162,10 @@ class Mo_Ldap_Customer{
 	}
 	
 	function send_otp_token(){
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("status"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
 		$url = get_option('mo_ldap_host_name') . '/moas/api/auth/challenge';
 		$ch = curl_init($url);
 		$customerKey =  $this->defaultCustomerKey;
@@ -198,6 +213,10 @@ class Mo_Ldap_Customer{
 	}
 
 	function validate_otp_token($transactionId,$otpToken){
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("status"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
 		$url = get_option('mo_ldap_host_name') . '/moas/api/auth/validate';
 		$ch = curl_init($url);
 
@@ -249,6 +268,10 @@ class Mo_Ldap_Customer{
 	}
 	
 	function check_customer() {
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("status"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
 		$url 	= get_option('mo_ldap_host_name') . "/moas/rest/customer/check-if-exists";
 		$ch 	= curl_init( $url );
 		$email 	= get_option("mo_ldap_admin_email");

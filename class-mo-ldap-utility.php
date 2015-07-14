@@ -69,5 +69,12 @@ class Mo_Ldap_Util{
 		);
 		return trim($string,"\0..\32");
 	}
+	
+	public static function is_curl_installed() {
+		if  (in_array  ('curl', get_loaded_extensions())) {
+			return 1;
+		} else 
+			return 0;
+	}
 }
 ?>
