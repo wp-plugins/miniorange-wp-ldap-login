@@ -4,7 +4,7 @@
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 2.1.1
+    Version: 2.1.2
     Author URI: http://miniorange.com
     */
 	

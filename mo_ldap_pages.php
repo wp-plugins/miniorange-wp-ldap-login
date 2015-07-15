@@ -147,6 +147,7 @@ function mo_ldap_login_page() {
 function mo_ldap_link() {
 	?>
 	<a href="http://miniorange.com/wordpress-ldap-login" style="display:none">Login to WordPress using LDAP</a>
+	<a href="http://miniorange.com/cloud-identity-broker-service" style="display:none">Cloud Identity broker service</a>
 	<?php
 }
 

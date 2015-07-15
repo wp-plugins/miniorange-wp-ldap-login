@@ -4,7 +4,7 @@ Donate link: http://miniorange.com
 Tags:ldap, AD, ldap login, ldap sso, AD sso, ldap authentication, AD authentication, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on, active directory, openldap login, login form, user login, authentication, login, WordPress login
 Requires at least: 2.0.2
 Tested up to: 4.2.1
-Stable tag: 2.2.6
+Stable tag: 2.2.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,9 @@ We can add the provision of user management such as creating users not present i
 
 == Changelog ==
 
+= 2.1.2 =
+Bug fixes
+
 = 2.1.1 =
 Added additional error handling and bug fixes.
 
@@ -88,6 +91,9 @@ LDAP usability fixes
 * this is the first release.
 
 == Upgrade Notice ==
+
+= 2.1.2 =
+Bug fixes
 
 = 2.1.1 =
 Added additional error handling and bug fixes.
