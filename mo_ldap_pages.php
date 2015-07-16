@@ -182,6 +182,17 @@ function mo_ldap_configuration_page(){
 				});
 			</script>
 			<br/>
+			<!-- Toggle checkbox -->
+			<form name="f" id="enable_register_user_form" method="post" action="">
+				<input type="hidden" name="option" value="mo_ldap_register_user" />
+				<input type="checkbox" id="mo_ldap_register_user" name="mo_ldap_register_user" value="1" <?php checked(get_option('mo_ldap_register_user') == 1);?> />Enable Auto Registering users if they do not exist in WordPress
+				</form>
+			<script>
+				jQuery('#mo_ldap_register_user').change(function() {
+					jQuery('#enable_register_user_form').submit();
+				});
+			</script>
+			<br/>
 		</div>
 		
 		<div class="mo_ldap_small_layout">	

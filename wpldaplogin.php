@@ -4,7 +4,7 @@
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 2.1.2
+    Version: 2.2
     Author URI: http://miniorange.com
     */
 	
@@ -32,9 +32,10 @@
 				remove_filter('authenticate', 'wp_authenticate_username_password', 20, 3);
 				add_filter('authenticate', array($this, 'ldap_login'), 20, 3);
 			}
+			register_activation_hook( __FILE__, array($this,'mo_ldap_activate')) ;
 		}
 		
-		function ldap_login($user, $username, $password){			
+		function ldap_login($user, $username, $password){	
 			if(empty($username) || empty ($password)){        
 				//create new error object and add errors to it.
 				$error = new WP_Error();
@@ -55,11 +56,33 @@
 			if($status == 'SUCCESS'){
 			  if( username_exists( $username)) {
 				  $user = get_userdatabylogin($username);
-				  
 				  return $user;
 			   } else {
-				  return $error;
-			   }
+				   
+					   if(!get_option('mo_ldap_register_user')) {
+							$error = new WP_Error();
+							$error->add('registration_disabled_error', __('<strong>ERROR</strong>: Your Administrator has not enabled Auto Registration. Please contact your Administrator.'));
+							return $error;
+						}else{
+							//create user if not exists
+						   $random_password 	= wp_generate_password( 10, false );
+						   $userdata = array(
+								'user_login'  =>  $username,
+								'user_pass'   =>  $random_password  // When creating an user, `user_pass` is expected.
+							);
+							$user_id = wp_insert_user( $userdata ) ;
+
+							//On success
+							if( !is_wp_error($user_id) ) {
+								$user = get_userdatabylogin($username);
+								return $user;
+							}else{
+								$error = new WP_Error();
+								$error->add('registration_error', __('<strong>ERROR</strong>: There was an error registering your account. Please try again.'));
+								return $error;
+							}
+					}
+				}
 				wp_redirect( site_url() );
 				exit;
 						
@@ -80,7 +103,6 @@
 		
 		function mo_ldap_login_widget_options(){
 			update_option( 'mo_ldap_host_name', 'https://auth.miniorange.com' );
-			
 			//Setting default configuration
 			$default_config = array(
 				'server_url' => 'ldap://58.64.132.235:389',
@@ -203,6 +225,16 @@
 						$this->show_success_message();
 					} else {
 						update_option( 'mo_ldap_message', 'Login through your LDAP has been disabled.');
+						$this->show_success_message();
+					}
+				}
+				else if( $_POST['option'] == "mo_ldap_register_user" ) {		//enable auto registration of users
+					update_option( 'mo_ldap_register_user', isset($_POST['mo_ldap_register_user']) ? $_POST['mo_ldap_register_user'] : 0);
+					if(get_option('mo_ldap_register_user')) {
+						update_option( 'mo_ldap_message', 'Auto Registering users has been enabled.');
+						$this->show_success_message();
+					} else {
+						update_option( 'mo_ldap_message', 'Auto Registering users has been disabled.');
 						$this->show_success_message();
 					}
 				}
@@ -526,6 +558,10 @@
 				wp_redirect($redirectUrl, 302);
 				exit;
 			}
+		}
+		
+		public function mo_ldap_activate() {
+			update_option( 'mo_ldap_register_user',1);
 		}
 		
 		public function mo_ldap_deactivate() {

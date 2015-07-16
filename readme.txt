@@ -4,7 +4,7 @@ Donate link: http://miniorange.com
 Tags:ldap, AD, ldap login, ldap sso, AD sso, ldap authentication, AD authentication, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on, active directory, openldap login, login form, user login, authentication, login, WordPress login
 Requires at least: 2.0.2
 Tested up to: 4.2.1
-Stable tag: 2.2.7
+Stable tag: 2.2.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,6 +17,7 @@ miniOrange LDAP Login provides login to WordPress using credentials stored in yo
 = Features :- =
 
 *	Login to WordPress using your LDAP credentials
+*	Automatic user registration after login if the user is not already registered with your site
 *	Uses LDAP or LDAPS for secure connection to your LDAP Server
 *	Can authenticate users against multiple search bases
 *	Test connection to your LDAP server
@@ -69,6 +70,9 @@ We can add the provision of user management such as creating users not present i
 
 == Changelog ==
 
+= 2.2 =
+New feature - Added Auto Registration of users post LDAP authentication
+
 = 2.1.2 =
 Bug fixes
 
@@ -91,6 +95,9 @@ LDAP usability fixes
 * this is the first release.
 
 == Upgrade Notice ==
+
+= 2.2 =
+New feature - Added Auto Registration of users post LDAP authentication
 
 = 2.1.2 =
 Bug fixes
