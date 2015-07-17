@@ -245,6 +245,7 @@ class Mo_Ldap_Config{
 		
 		$fields = array(
 			'customerId' => $customer_id,
+			'encryptedCustomerId' => Mo_Ldap_Util::encrypt($customer_id),
 			'ldapAuditRequest' => array(
 				'endUserEmail' => get_option('mo_ldap_admin_email'),
 				'applicationName' => $_SERVER['SERVER_NAME'],
