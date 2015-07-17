@@ -4,7 +4,7 @@
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 2.3
+    Version: 2.2
     Author URI: http://miniorange.com
     */
 	
@@ -35,7 +35,7 @@
 			register_activation_hook( __FILE__, array($this,'mo_ldap_activate')) ;
 		}
 		
-		function ldap_login($user, $username, $password){
+		function ldap_login($user, $username, $password){	
 			if(empty($username) || empty ($password)){        
 				//create new error object and add errors to it.
 				$error = new WP_Error();
@@ -268,47 +268,39 @@
 					update_option( 'mo_ldap_search_base', Mo_Ldap_Util::encrypt($search_base));
 					update_option( 'mo_ldap_search_filter', Mo_Ldap_Util::encrypt($search_filter));
 					
+					//This makes a call to check if connection is established successfully.
 					$mo_ldap_config = new Mo_Ldap_Config();
-					
-					//Save LDAP configuration
-					$save_content = $mo_ldap_config->save_ldap_config();
-					$save_response = json_decode( $save_content, true );
-					$message = '';
-					$status = 'error';
-					
-					if(strcasecmp($save_response['statusCode'], 'SUCCESS') == 0) {
-						$message = $message . 'Your configuration has been saved.';
-						$status = 'success';
-					} else if(strcasecmp($save_response['statusCode'], 'ERROR') == 0) {
-						$message = $message . $save_response['statusMessage'];
-					} else if( strcasecmp( $save_response['statusCode'], 'CURL_ERROR') == 0) {
-						update_option('mo_ldap_message', $save_response['statusMessage']);
-						$this->show_error_message();
-						return;
-					} else {
-						$message = $message. 'There was an error in saving your configuration.';
-					}
-					
-					//Test connection with the LDAP configuration provided. This makes a call to check if connection is established successfully.
 					$content = $mo_ldap_config->test_connection(null);
 					$response = json_decode( $content, true );
 					
 					if(strcasecmp($response['statusCode'], 'SUCCESS') == 0) {
-						if(strcasecmp($status, 'success') == 0) {
-							update_option( 'mo_ldap_message', $message . ' Connection was established successfully. Please test authentication to verify LDAP User Mapping Configuration.' );
+						//This makes a call to save LDAP configuration
+						$save_content = $mo_ldap_config->save_ldap_config();
+						$save_response = json_decode( $save_content, true );
+						
+						if(strcasecmp($save_response['statusCode'], 'SUCCESS') == 0) {
+							update_option( 'mo_ldap_message', 'Connection was established successfully. Your configuration has been saved. Please test authentication to verify LDAP User Mapping Configuration.');
 							$this->show_success_message();
+						} else if(strcasecmp($save_response['statusCode'], 'ERROR') == 0) {
+							$this->delete_ldap_configuration();
+							update_option( 'mo_ldap_message', 'Connection was established successfully but an error occured. ' . $save_response['statusMessage']);
+							$this->show_error_message();
 						} else {
-							update_option( 'mo_ldap_message', $message . ' Connection was established successfully.');
+							$this->delete_ldap_configuration();
+							update_option( 'mo_ldap_message', 'Connection was established successfully but an error occured.');
 							$this->show_error_message();
 						}
 					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
-						update_option( 'mo_ldap_message', $message . ' ' . $response['statusMessage'] . ' Please make sure to open your firewall to allow incoming requests to your LDAP from hosts - 52.6.168.155 , 52.6.204.243 and open port 389(636 for SSL or ldaps). Test using Ping LDAP Server.');
+						$this->delete_ldap_configuration();
+						update_option( 'mo_ldap_message', $response['statusMessage'] . ' Please make sure your firewall is open - click on troubleshooting to know more. Your configuration has not been saved.');
 						$this->show_error_message();
 					} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
-						update_option( 'mo_ldap_message', $message . ' ' . $response['statusMessage']);
+						$this->delete_ldap_configuration();
+						update_option('mo_ldap_message', $response['statusMessage']);
 						$this->show_error_message();
 					} else {
-						update_option( 'mo_ldap_message', $message . ' There was an error in connecting with the current settings. Please make sure to open your firewall to allow incoming requests to your LDAP from hosts - 52.6.168.155 , 52.6.204.243 and open port 389(636 for SSL or ldaps). Test using Ping LDAP Server.');
+						$this->delete_ldap_configuration();
+						update_option( 'mo_ldap_message', 'There was an error. Please make sure your firewall is open - click on troubleshooting to know more. Your configuration has not been saved.');
 						$this->show_error_message();
 					}
 				}
@@ -511,6 +503,18 @@
 			$this->show_success_message();
 		}
 		
+		/*
+		 * Delelte LDAP Config
+		 */
+		function delete_ldap_configuration() {
+			update_option( 'mo_ldap_server_url', '');
+			update_option( 'mo_ldap_server_dn', '');
+			update_option( 'mo_ldap_server_password', '');
+			update_option( 'mo_ldap_dn_attribute', '');
+			update_option( 'mo_ldap_search_base', '');
+			update_option( 'mo_ldap_search_filter', '');
+		}
+		
 		function mo_ldap_settings_style() {
 			wp_enqueue_style( 'mo_ldap_admin_settings_style', plugins_url('includes/css/style_settings.css', __FILE__));
 			wp_enqueue_style( 'mo_ldap_admin_settings_phone_style', plugins_url('includes/css/phone.css', __FILE__));
@@ -578,7 +582,12 @@
 			delete_option('mo_ldap_message');
 			
 			delete_option('mo_ldap_enable_login');
+			delete_option('mo_ldap_server_url');
+			delete_option('mo_ldap_server_dn');
 			delete_option('mo_ldap_server_password');
+			delete_option('mo_ldap_dn_attribute');
+			delete_option('mo_ldap_search_base');
+			delete_option('mo_ldap_search_filter');
 			
 			delete_option('mo_ldap_transactionId');
 			delete_option('mo_ldap_registration_status');
