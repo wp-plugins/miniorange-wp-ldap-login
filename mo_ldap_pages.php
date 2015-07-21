@@ -43,7 +43,7 @@ function mo_ldap_settings() {
 					?>
 				</td>
 				<td style="vertical-align:top;padding-left:1%;">
-					<?php echo mo_ldap_support(); ?>	
+					<?php echo mo_ldap_support(); ?>
 				</td>
 			</tr>
 		</table>
@@ -93,7 +93,7 @@ function mo_ldap_registration_page(){
 				</tr>
 				<tr>
 					<td>&nbsp;</td>
-					<td><input type="submit" name="submit" value="Save"
+					<td><input type="submit" value="Save"
 						class="button button-primary button-large" /></td>
 				</tr>
 			</table>
@@ -103,7 +103,7 @@ function mo_ldap_registration_page(){
 <script>
 	jQuery("#phone").intlTelInput();
 </script>
-<?php 
+<?php
 }
 /* End of Create Customer function */
 
@@ -130,8 +130,7 @@ function mo_ldap_login_page() {
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td><input type="submit" name="submit"
-								class="button button-primary button-large" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
+							<td><input type="submit" class="button button-primary button-large" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
 								target="_blank"
 								href="<?php echo get_option('mo_ldap_host_name') . "/moas/idp/userforgotpassword"; ?>">Forgot
 									your password?</a></td>
@@ -154,18 +153,18 @@ function mo_ldap_link() {
 /* Configure LDAP function */
 function mo_ldap_configuration_page(){
 	$default_config = get_option('mo_ldap_default_config');
-	
-	$server_url = isset($_POST['ldap_server']) ? $_POST['ldap_server'] : 
+
+	$server_url = isset($_POST['ldap_server']) ? $_POST['ldap_server'] :
 		( get_option('mo_ldap_server_url') ? Mo_Ldap_Util::decrypt(get_option('mo_ldap_server_url')) : '');
-	$dn = isset($_POST['dn']) ? $_POST['dn'] : 
+	$dn = isset($_POST['dn']) ? $_POST['dn'] :
 		(get_option('mo_ldap_server_dn') ? Mo_Ldap_Util::decrypt(get_option('mo_ldap_server_dn')) : '');
-	$admin_password = isset($_POST['admin_password']) ? $_POST['admin_password'] : 
+	$admin_password = isset($_POST['admin_password']) ? $_POST['admin_password'] :
 		(get_option('mo_ldap_server_password') ? Mo_Ldap_Util::decrypt(get_option('mo_ldap_server_password')) : '');
 	$dn_attribute = isset($_POST['dn_attribute']) ? $_POST['dn_attribute'] :
 		(get_option('mo_ldap_dn_attribute') ? Mo_Ldap_Util::decrypt(get_option('mo_ldap_dn_attribute')) : '');
-	$search_base = isset($_POST['search_base']) ? $_POST['search_base'] : 
+	$search_base = isset($_POST['search_base']) ? $_POST['search_base'] :
 		(get_option('mo_ldap_search_base') ? Mo_Ldap_Util::decrypt(get_option('mo_ldap_search_base')) : '');
-	$search_filter = isset($_POST['search_filter']) ? $_POST['search_filter'] : 
+	$search_filter = isset($_POST['search_filter']) ? $_POST['search_filter'] :
 		(get_option('mo_ldap_search_filter') ? Mo_Ldap_Util::decrypt(get_option('mo_ldap_search_filter')) : '');
 	?>
 		<div class="mo_ldap_small_layout" style="margin-top:0px;">
@@ -173,7 +172,16 @@ function mo_ldap_configuration_page(){
 			<form name="f" id="enable_login_form" method="post" action="">
 				<input type="hidden" name="option" value="mo_ldap_enable" />
 				<h3>Enable login using LDAP</h3>
-				<input type="checkbox" id="enable_ldap_login" name="enable_ldap_login" value="1" <?php checked(get_option('mo_ldap_enable_login') == 1);?> />Enable LDAP login
+				
+				
+				
+				<?php 
+					$serverUrl = get_option('mo_ldap_server_url');
+					if(isset($serverUrl) && $serverUrl != ''){?>
+						<input type="checkbox" id="enable_ldap_login" name="enable_ldap_login" value="1" <?php checked(get_option('mo_ldap_enable_login') == 1);?> />Enable LDAP login
+				<?php } else{?>
+						<input type="checkbox" id="enable_ldap_login" name="enable_ldap_login" value="1" <?php checked(get_option('mo_ldap_enable_login') == 1);?> disabled />Enable LDAP login
+				<?php }?>
 				<p>Enabling LDAP login will protect your login page by your configured LDAP. <b>Please check this only after you have successfully tested your configuration</b> as the default WordPress login will stop working.</p>
 			</form>
 			<script>
@@ -194,23 +202,57 @@ function mo_ldap_configuration_page(){
 			</script>
 			<br/>
 		</div>
-		
-		<div class="mo_ldap_small_layout">	
+
+		<div class="mo_ldap_small_layout">
+			<script>
+				function ping_server(){
+
+					var isFirewallAllowed = document.getElementById('firewall_allowed').checked;
+
+					if(!isFirewallAllowed){
+						alert("Check the above option to confirm that you have allowed access to the LDAP server from the given IP addresses.");
+					} else{
+						var ldapServerUrl = document.getElementById('ldap_server').value;
+						if(!ldapServerUrl || ldapServerUrl.trim() == ""){
+							alert("Enter LDAP Server URL");
+						} else{
+							var option = document.getElementById("mo_ldap_configuration_form_action").value = "mo_ldap_ping_server";
+							//alert(document.getElementById("mo_ldap_configuration_form_action").value);
+							var configForm = document.getElementById("mo_form1");
+							//alert(configForm);
+							configForm.submit();
+						}
+					}
+				}
+			</script>
 			<!-- Save LDAP Configuration -->
-			<form name="f" method="post" action="">
-				<input type="hidden" name="option" value="mo_ldap_save_config" />
+			<form id="mo_form1" name="f" method="post" action="">
+				<input id="mo_ldap_configuration_form_action" type="hidden" name="option" value="mo_ldap_save_config" />
 				<!-- Copy default values to configuration -->
-				<p><strong style="font-size:14px;">NOTE: You will need to acquire the values for the below given fields from your LDAP Administrator.</strong></p>
+				<p><strong style="font-size:14px;">NOTE: </strong> You need to find out the values for the below given fields from your LDAP Administrator.</strong></p>
+				<p><strong style="font-size:14px;">NOTE: </strong>You need to allow incoming requests from hosts - <font style="color:blue">52.6.168.155</font> and <font style="color:blue">52.6.204.243</font> by a firewall rule for the port <font style="color:blue">389</font>(<font style="color:blue">636</font> for SSL or ldaps) on LDAP Server.</p>
 				<h3 class="mo_ldap_left">LDAP Connection Information</h3>
+				<ul>
+					<li><input type="checkbox" name="firewall_allowed" id="firewall_allowed" /> <b>Allowed incoming requests from hosts - <font style="color:blue">52.6.168.155</font> and <font style="color:blue">52.6.204.243</font> by a firewall rule for the port <font style="color:blue">389</font>(<font style="color:blue">636</font> for SSL or ldaps) on LDAP Server.</b></li>
+				</ul>
 				<div id="panel1">
 					<table class="mo_ldap_settings_table">
 						<tr>
-							<td><b><font color="#FF0000">*</font>LDAP Server:</b></td>
+							<td style="width: 24%"><b><font color="#FF0000">*</font>LDAP Server:</b></td>
 							<td><input class="mo_ldap_table_textbox" type="url" id="ldap_server" name="ldap_server" required placeholder="ldap://<server_address or IP>:<port>" value="<?php echo $server_url?>" /></td>
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td><i>Connection string for the LDAP Server. eg: ldap://myldapserver.domain:port</i></td>
+							<td><i>Specify the host name for the LDAP server eg: ldap://myldapserver.domain:389 , ldap://89.38.192.1:389. When using SSL, the host may have to take the form ldaps://host:636.</i></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td><input type="button" class="button button-primary button-large" onclick="ping_server();" value="Contact LDAP Server" />&nbsp;&nbsp;<span id="pingResult"></span></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td float="right"><i>Confirm connection to your LDAP server from <font style="color:blue">52.6.168.155</font> , <font style="color:blue">52.6.204.243</font> through port <font style="color:blue">389</font>(<font style="color:blue">636</font> for SSL or ldaps).</i></td>
 						</tr>
 						<tr><td>&nbsp;</td></tr>
 						<tr>
@@ -219,7 +261,7 @@ function mo_ldap_configuration_page(){
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td><i>LDAP service account distinguished name. e.g. CN=service,DC=domain,DC=com</i></td>
+							<td><i>Specify the Service Account DN(distinguished Name) of the LDAP server. e.g. cn=username,cn=group,dc=domain,dc=com<br/>uid=username,ou=organisational unit,dc=domain,dc=com.</i></td>
 						</tr>
 						<tr><td>&nbsp;</td></tr>
 						<tr>
@@ -228,7 +270,7 @@ function mo_ldap_configuration_page(){
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td><i>LDAP service account password</i></td>
+							<td><i>Password for the Service Account in the LDAP Server.</i></td>
 						</tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
@@ -251,7 +293,7 @@ function mo_ldap_configuration_page(){
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td><i>Define where users logging in will be located in the LDAP Environment. For multiple searchBase use semicolon(;) separated values.</i></td>
+							<td><i>Specify the base DN of the LDAP server or organisational unit that should used as a base for all LDAP searches. eg. cn=Users,dc=domain,dc=com. For multiple searchBase use semicolon(;) separated values. eg. cn=Users,dc=domain,dc=com; ou=people,dc=domian,dc=com<br/>dc=domain,dc=com</i></td>
 						</tr>
 						<tr><td>&nbsp;</td></tr>
 						<tr>
@@ -260,12 +302,20 @@ function mo_ldap_configuration_page(){
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td><i>It is a basic LDAP Query for searching users based on mapping of username to a particular LDAP attribute. If you want to login using your common name then put this in your search filter eg: (&(objectClass=*)(cn=?)). If you want to login using your email, then put this in your search filter e.g. (&(objectClass=user)(mail=?))</i></td>
+							<td><i>It is a basic LDAP Query for searching users based on mapping of username to a particular LDAP attribute. Format: <b>(&(objectClass=*)(&lt;LDAP_ATTRIBUTE&gt;=?))</b>. Replace <b>&lt;LDAP_ATTRIBUTE&gt;</b> with the attribute where your username is stored. Some common attributes are 
+							<ol>
+							<table>
+								<tr><td style="width:50%">common name</td><td>(&(objectClass=*)(<b>cn</b>=?))</td></tr>
+								<tr><td>email</td><td>(&(objectClass=*)(<b>mail</b>=?))</td></tr> 
+								<tr><td>logon name</td><td>(&(objectClass=*)(<b>sAMAccountName</b>=?))<br/>(&(objectClass=*)(<b>userPrincipalName</b>=?))</td></tr>
+								<tr><td>custom attribute where you store your WordPress usernames use</td> <td>(&(objectClass=*)(<b>customAttribute</b>=?))</td></tr>
+							</table>
+							</ol>
 						</tr>
 						<tr><td>&nbsp;</td></tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td><input type="submit" name="submit" class="button button-primary button-large" value="Test Connection & Save"/>&nbsp;&nbsp; <input
+							<td><input type="submit" class="button button-primary button-large" value="Test Connection & Save"/>&nbsp;&nbsp; <input
 								type="button" id="conn_help" class="help" value="Troubleshooting" /></td>
 						</tr>
 						<tr>
@@ -302,7 +352,7 @@ function mo_ldap_configuration_page(){
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
-						<td><input type="submit" name="submit" class="button button-primary button-large" value="Test Authentication"/>&nbsp;&nbsp; <input
+						<td><input type="submit" class="button button-primary button-large" value="Test Authentication"/>&nbsp;&nbsp; <input
 								type="button" id="auth_help" class="help" value="Troubleshooting" /></td>
 					</tr>
 					<tr>
@@ -323,7 +373,7 @@ function mo_ldap_configuration_page(){
 	<?php
 }
 /* End of Configure LDAP function */
-		
+
 /* Test Default Configuration*/
 function mo_ldap_default_config_page() {
 	$default_config = get_option('mo_ldap_default_config');
@@ -364,12 +414,12 @@ function mo_ldap_default_config_page() {
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td><input type="submit" name="submit" class="button button-primary button-large" value="Test Connection"/></td>
+							<td><input type="submit" class="button button-primary button-large" value="Test Connection"/></td>
 						</tr>
 					</table>
 				</div>
 		</form>
-		
+
 		<!-- Test authentication for default configuration-->
 		<form name="f" method="post" action="">
 			<input type="hidden" name="option" value="mo_ldap_test_default_auth" />
@@ -387,7 +437,7 @@ function mo_ldap_default_config_page() {
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
-						<td><input type="submit" name="submit" class="button button-primary button-large" value="Test Authentication"/></td>
+						<td><input type="submit" class="button button-primary button-large" value="Test Authentication"/></td>
 					</tr>
 				</table>
 			</div>
@@ -416,7 +466,7 @@ function mo_ldap_show_otp_verification(){
 						<tr>
 							<td>&nbsp;</td>
 							<td>
-							<input type="submit" name="submit" value="Validate OTP" class="button button-primary button-large" />
+							<input type="submit" value="Validate OTP" class="button button-primary button-large" />
 							<a id="back_button" href=""class="button button-primary button-large">Cancel</a>
 							</td>
 
@@ -433,7 +483,7 @@ function mo_ldap_show_otp_verification(){
 		<script>
 			jQuery('#back_button').click(function() {
 				<?php update_option( 'mo_ldap_registration_status', '' );?>
-				window.location.reload();	
+				window.location.reload();
 			}
 		</script>
 <?php

@@ -300,6 +300,43 @@ class Mo_Ldap_Customer{
 
 		return $content;
 	}
+	
+	function ping_ldap_server($ldap_server_url){
+		if(!Mo_Ldap_Util::is_curl_installed()) {
+			return json_encode(array("status"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}
+		
+		$customer_id = get_option('mo_ldap_admin_customer_key');
+		$application_name = $_SERVER['SERVER_NAME'];
+		$admin_email = get_option('mo_ldap_admin_email');
+		$app_type = 'WP LDAP Login Plugin';
+		$request_type = 'Ping LDAP Server';
+		$url = get_option('mo_ldap_host_name') . '/moas/api/ldap/ping?customerId=' . urlencode($customer_id)
+				. '&endUserEmail=' . urlencode($admin_email) . '&ldapServerUrl=' . urlencode($ldap_server_url)
+				. '&appType=' . urlencode($app_type) . '&requestType=' . urlencode($request_type) . '&applicationName=' . urlencode($application_name);
+		
+		$ch 	= curl_init( $url );
+		
+		curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+		curl_setopt( $ch, CURLOPT_ENCODING, "" );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $ch, CURLOPT_AUTOREFERER, true );
+		curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+		
+		curl_setopt( $ch, CURLOPT_MAXREDIRS, 10 );
+		curl_setopt( $ch, CURLOPT_HTTPHEADER, array( 'charset: UTF - 8', 'Authorization: Basic' ) );
+		curl_setopt( $ch, CURLOPT_POST, false);
+		$content = curl_exec( $ch );
+		
+		if( curl_errno( $ch ) ){
+			echo 'Request Error:' . curl_error( $ch );
+			exit();
+		}
+		curl_close( $ch );
+		
+		return $content;
+		
+	}
 
 
 }?>
