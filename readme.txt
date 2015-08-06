@@ -8,7 +8,7 @@ Stable tag: 2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Login to a publicly hosted wordpress site using credentials stored in ActiveDirectory, OpenLDAP and other LDAP servers. No need to install LDAP extension in WordPress.
+Login to a publicly hosted wordpress site using credentials stored in ActiveDirectory, OpenLDAP and other LDAP servers. No need to have LDAP extension.
 
 == Description ==
 
