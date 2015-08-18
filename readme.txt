@@ -1,7 +1,7 @@
 === LDAP/AD Login for Cloud ===
 Contributors: miniOrange
 Donate link: http://miniorange.com
-Tags:active directory,ldap, AD, ldap login, ldap sso, AD sso, ldap authentication, AD authentication, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on,ad login, openldap login, login form, user login, authentication, login, WordPress login
+Tags:ldap, AD, ldap login, ldap sso, AD sso, ldap authentication, AD authentication,active directory, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on,ad login, openldap login, login form, user login, authentication, login, WordPress login
 Requires at least: 2.0.2
 Tested up to: 4.2.1
 Stable tag: 2.3
