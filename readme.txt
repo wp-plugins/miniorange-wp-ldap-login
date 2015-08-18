@@ -1,14 +1,14 @@
 === LDAP/AD Login for Cloud ===
 Contributors: miniOrange
 Donate link: http://miniorange.com
-Tags:ldap, AD, ldap login, ldap sso, AD sso, ldap authentication, AD authentication, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on, active directory, openldap login, login form, user login, authentication, login, WordPress login
+Tags:active directory,ldap, AD, ldap login, ldap sso, AD sso, ldap authentication, AD authentication, active directory authentication, ldap single sign on, ad single sign on, active directory single sign on,ad login, openldap login, login form, user login, authentication, login, WordPress login
 Requires at least: 2.0.2
 Tested up to: 4.2.1
 Stable tag: 2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Login to a publicly hosted wordpress site using credentials stored in ActiveDirectory, OpenLDAP and other LDAP servers. No need to have LDAP extension.
+Login to publicly hosted wordpress site using credentials stored in Active Directory, OpenLDAP and other LDAP servers. No need to have LDAP extension.
 
 == Description ==
 
@@ -73,6 +73,9 @@ We can add the provision of user management such as creating users not present i
 
 == Changelog ==
 
+= 2.4 =
+Added troubleshooting page.
+
 = 2.3 =
 Added Ping to LDAP Server. Usability fixes.
 
@@ -101,6 +104,9 @@ LDAP usability fixes
 * this is the first release.
 
 == Upgrade Notice ==
+
+= 2.4 =
+Added troubleshooting page.
 
 = 2.3 =
 Added Ping to LDAP Server. Usability fixes.

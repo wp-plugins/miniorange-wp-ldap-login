@@ -1,3 +1,36 @@
+.mo_ldap_help_title {
+	font-size:17px;
+	width:100%;
+	color:#1B79AE;
+	cursor:pointer;
+	font-weight: bold;
+}
+.mo_ldap_help_desc {
+	font-size:13px;
+	border-left:solid 2px rgba(128, 128, 128, 0.65);
+	margin-top:10px;
+	padding-left:10px;
+}
+.mo_ldap_help {
+	width: 95%;
+}
+.mo_ldap_help_cell {
+	padding: 20px;
+	border-bottom: solid 1px grey;
+}
+.mo_ldap_support_layout{
+       width: 93%;
+       background-color:#FFFFFF; 
+       border:1px solid #CCCCCC; 
+       padding-left:20px; 
+}
+.mo_ldap_table_layout {
+	background-color:#FFFFFF; 
+	border:1px solid #CCCCCC; 
+	padding:0px 10px 10px 10px;
+	margin-bottom: 10px;
+}
+
 .mo_ldap_table_layout {
 	background-color:#FFFFFF; 
 	border:1px solid #CCCCCC; 

@@ -42,6 +42,10 @@ class Mo_Ldap_Util{
 	}
 	
 	public static function encrypt($str){
+		if(!Mo_Ldap_Util::is_extension_installed('mcrypt')) {
+			return;
+		}
+		
 		$key = get_option('mo_ldap_customer_token');
 		$block = mcrypt_get_block_size('rijndael_128', 'ecb');
 		$pad = $block - (strlen($str) % $block);
@@ -51,6 +55,10 @@ class Mo_Ldap_Util{
 	
 	public static function decrypt($value)
 	{
+		if(!Mo_Ldap_Util::is_extension_installed('mcrypt')) {
+			return;
+		}
+		
 		$key = get_option('mo_ldap_customer_token');
 		$string = rtrim(
 			mcrypt_decrypt(
@@ -75,6 +83,15 @@ class Mo_Ldap_Util{
 			return 1;
 		} else 
 			return 0;
+	}
+	
+	public static function is_extension_installed($name) {
+		if  (in_array  ($name, get_loaded_extensions())) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 }
 ?>

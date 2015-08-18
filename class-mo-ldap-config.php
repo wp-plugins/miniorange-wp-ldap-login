@@ -27,6 +27,8 @@ class Mo_Ldap_Config{
 	function ldap_login($username, $password) {
 		if(!Mo_Ldap_Util::is_curl_installed()) {
 			return 'CURL_ERROR';
+		}else if(!Mo_Ldap_Util::is_extension_installed('mcrypt')) {
+			return 'MCRYPT_ERROR';
 		}
 		
 		$url = get_option('mo_ldap_host_name')  . "/moas/api/ldap/authenticate";
@@ -113,7 +115,7 @@ class Mo_Ldap_Config{
 	*/
 	function test_connection($is_default) {
 		if(!Mo_Ldap_Util::is_curl_installed()) {
-			return json_encode(array("statusCode"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+			return json_encode(array("statusCode"=>'CURL_ERROR','statusMessage'=>'<a target="_blank" href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
 		}
 		
 		$url = '';
@@ -169,6 +171,8 @@ class Mo_Ldap_Config{
 	function test_authentication($username, $password, $is_default) {
 		if(!Mo_Ldap_Util::is_curl_installed()) {
 			return json_encode(array("statusCode"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+		}else if(!Mo_Ldap_Util::is_extension_installed('mcrypt')) {
+			return json_encode(array("statusCode"=>'MCRYPT_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/mcrypt.installation.php">PHP mcrypt extension</a> is not installed or disabled.'));
 		}
 		
 		$url = '';
@@ -232,6 +236,7 @@ class Mo_Ldap_Config{
 		$dn_attribute = '';
 		$search_base = '';
 		$search_filter = '';
+		$username = $current_user->user_email;
 		
 		if(Mo_Ldap_Util::check_empty_or_null($is_default)) {
 			$server_name = get_option( 'mo_ldap_server_url');
@@ -240,13 +245,14 @@ class Mo_Ldap_Config{
 			$dn_attribute = get_option( 'mo_ldap_dn_attribute');
 			$search_base = get_option( 'mo_ldap_search_base');
 			$search_filter = get_option( 'mo_ldap_search_filter');
+			$username = get_option('mo_ldap_admin_email');
 		}
 		$customer_id = get_option('mo_ldap_admin_customer_key') ? get_option('mo_ldap_admin_customer_key') : null;
 		
 		$fields = array(
 			'customerId' => $customer_id,
 			'ldapAuditRequest' => array(
-				'endUserEmail' => get_option('mo_ldap_admin_email'),
+				'endUserEmail' => $username,
 				'applicationName' => $_SERVER['SERVER_NAME'],
 				'appType' => 'WP LDAP Login Plugin',
 				'requestType' => $request_type

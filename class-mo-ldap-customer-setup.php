@@ -303,7 +303,7 @@ class Mo_Ldap_Customer{
 	
 	function ping_ldap_server($ldap_server_url){
 		if(!Mo_Ldap_Util::is_curl_installed()) {
-			return json_encode(array("status"=>'CURL_ERROR','statusMessage'=>'<a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
+			return json_encode(array("statusCode"=>'CURL_ERROR','statusMessage'=>'<a target="_blank" href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
 		}
 		
 		$customer_id = get_option('mo_ldap_admin_customer_key');

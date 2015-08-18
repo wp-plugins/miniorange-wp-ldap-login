@@ -1,10 +1,10 @@
 <?php 
     /*
-    Plugin Name: miniOrange LDAP Login
+    Plugin Name: LDAP/AD Login for Cloud
     Plugin URI: http://miniorange.com
     Description: Plugin for login into Wordpress through credentials stored in LDAP
     Author: miniorange
-    Version: 2.3
+    Version: 2.4
     Author URI: http://miniorange.com
     */
 	
@@ -90,6 +90,10 @@
 				$error = new WP_Error();
 				$error->add('curl_error', __('<strong>ERROR</strong>: <a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled.'));
 				return $error;
+			} else if($status == 'MCRYPT_ERROR'){
+				$error = new WP_Error();
+				$error->add('curl_error', __('<strong>ERROR</strong>: <a href="http://php.net/manual/en/mcrypt.installation.php">PHP mcrypt extension</a> is not installed or disabled.'));
+				return $error;
 			} else {
 				$error = new WP_Error();
 				$error->add('incorrect_credentials', __('<strong>ERROR</strong>: Invalid username or incorrect password. Please try again.'));
@@ -98,7 +102,7 @@
 		}
 	
 		function mo_ldap_login_widget_menu(){
-			add_options_page('LDAP Login Config', 'LDAP Login Config', 'activate_plugins', 'mo_ldap_login', array( $this, 'mo_ldap_login_widget_options'));
+			add_menu_page ('LDAP/AD Login for Cloud', 'LDAP/AD Login for Cloud', 'activate_plugins', 'mo_ldap_login', array( $this, 'mo_ldap_login_widget_options'),plugin_dir_url(__FILE__) . 'includes/images/miniorange_icon.png');
 		}
 		
 		function mo_ldap_login_widget_options(){
@@ -261,55 +265,60 @@
 					}
 					
 					//Encrypting all fields and storing them
-					update_option( 'mo_ldap_server_url', Mo_Ldap_Util::encrypt($server_name));
-					update_option( 'mo_ldap_server_dn', Mo_Ldap_Util::encrypt($dn));
-					update_option( 'mo_ldap_server_password', Mo_Ldap_Util::encrypt($admin_ldap_password));
-					update_option( 'mo_ldap_dn_attribute', Mo_Ldap_Util::encrypt($dn_attribute));
-					update_option( 'mo_ldap_search_base', Mo_Ldap_Util::encrypt($search_base));
-					update_option( 'mo_ldap_search_filter', Mo_Ldap_Util::encrypt($search_filter));
-					
-					$mo_ldap_config = new Mo_Ldap_Config();
-					
-					//Save LDAP configuration
-					$save_content = $mo_ldap_config->save_ldap_config();
-					$save_response = json_decode( $save_content, true );
-					$message = '';
-					$status = 'error';
-					
-					if(strcasecmp($save_response['statusCode'], 'SUCCESS') == 0) {
-						$message = $message . 'Your configuration has been saved.';
-						$status = 'success';
-					} else if(strcasecmp($save_response['statusCode'], 'ERROR') == 0) {
-						$message = $message . $save_response['statusMessage'];
-					} else if( strcasecmp( $save_response['statusCode'], 'CURL_ERROR') == 0) {
-						update_option('mo_ldap_message', $save_response['statusMessage']);
+					if(!Mo_Ldap_Util::is_extension_installed('mcrypt')) {
+						update_option( 'mo_ldap_message', 'PHP mcrypt extension is not installed or disabled. Please enable it first.');
 						$this->show_error_message();
-						return;
-					} else {
-						$message = $message. 'There was an error in saving your configuration.';
-					}
-					
-					//Test connection with the LDAP configuration provided. This makes a call to check if connection is established successfully.
-					$content = $mo_ldap_config->test_connection(null);
-					$response = json_decode( $content, true );
-					
-					if(strcasecmp($response['statusCode'], 'SUCCESS') == 0) {
-						if(strcasecmp($status, 'success') == 0) {
-							update_option( 'mo_ldap_message', $message . ' Connection was established successfully. Please test authentication to verify LDAP User Mapping Configuration.' );
-							$this->show_success_message();
+					}else{
+						update_option( 'mo_ldap_server_url', Mo_Ldap_Util::encrypt($server_name));
+						update_option( 'mo_ldap_server_dn', Mo_Ldap_Util::encrypt($dn));
+						update_option( 'mo_ldap_server_password', Mo_Ldap_Util::encrypt($admin_ldap_password));
+						update_option( 'mo_ldap_dn_attribute', Mo_Ldap_Util::encrypt($dn_attribute));
+						update_option( 'mo_ldap_search_base', Mo_Ldap_Util::encrypt($search_base));
+						update_option( 'mo_ldap_search_filter', Mo_Ldap_Util::encrypt($search_filter));
+						
+						$mo_ldap_config = new Mo_Ldap_Config();
+						
+						//Save LDAP configuration
+						$save_content = $mo_ldap_config->save_ldap_config();
+						$save_response = json_decode( $save_content, true );
+						$message = '';
+						$status = 'error';
+						
+						if(strcasecmp($save_response['statusCode'], 'SUCCESS') == 0) {
+							$message = $message . 'Your configuration has been saved.';
+							$status = 'success';
+						} else if(strcasecmp($save_response['statusCode'], 'ERROR') == 0) {
+							$message = $message . $save_response['statusMessage'];
+						} else if( strcasecmp( $save_response['statusCode'], 'CURL_ERROR') == 0) {
+							update_option('mo_ldap_message', $save_response['statusMessage']);
+							$this->show_error_message();
+							return;
 						} else {
-							update_option( 'mo_ldap_message', $message . ' Connection was established successfully.');
+							$message = $message. 'There was an error in saving your configuration.';
+						}
+						
+						//Test connection with the LDAP configuration provided. This makes a call to check if connection is established successfully.
+						$content = $mo_ldap_config->test_connection(null);
+						$response = json_decode( $content, true );
+						
+						if(strcasecmp($response['statusCode'], 'SUCCESS') == 0) {
+							if(strcasecmp($status, 'success') == 0) {
+								update_option( 'mo_ldap_message', $message . ' Connection was established successfully. Please test authentication to verify LDAP User Mapping Configuration.' );
+								$this->show_success_message();
+							} else {
+								update_option( 'mo_ldap_message', $message . ' Connection was established successfully.');
+								$this->show_error_message();
+							}
+						} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
+							update_option( 'mo_ldap_message', $message . ' ' . $response['statusMessage'] . ' Please make sure to open your firewall to allow incoming requests to your LDAP from hosts - 52.6.168.155 , 52.6.204.243 and open port 389(636 for SSL or ldaps). Test using Ping LDAP Server.');
+							$this->show_error_message();
+						} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
+							update_option( 'mo_ldap_message', $message . ' ' . $response['statusMessage']);
+							$this->show_error_message();
+						} else {
+							update_option( 'mo_ldap_message', $message . ' There was an error in connecting with the current settings. Please make sure to open your firewall to allow incoming requests to your LDAP from hosts - 52.6.168.155 , 52.6.204.243 and open port 389(636 for SSL or ldaps). Test using Ping LDAP Server.');
 							$this->show_error_message();
 						}
-					} else if(strcasecmp($response['statusCode'], 'ERROR') == 0) {
-						update_option( 'mo_ldap_message', $message . ' ' . $response['statusMessage'] . ' Please make sure to open your firewall to allow incoming requests to your LDAP from hosts - 52.6.168.155 , 52.6.204.243 and open port 389(636 for SSL or ldaps). Test using Ping LDAP Server.');
-						$this->show_error_message();
-					} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
-						update_option( 'mo_ldap_message', $message . ' ' . $response['statusMessage']);
-						$this->show_error_message();
-					} else {
-						update_option( 'mo_ldap_message', $message . ' There was an error in connecting with the current settings. Please make sure to open your firewall to allow incoming requests to your LDAP from hosts - 52.6.168.155 , 52.6.204.243 and open port 389(636 for SSL or ldaps). Test using Ping LDAP Server.');
-						$this->show_error_message();
 					}
 				}
 				else if( $_POST['option'] == "mo_ldap_test_auth" ) {		//test authentication with current settings
@@ -354,6 +363,9 @@
 					} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
 						update_option('mo_ldap_message', $response['statusMessage']);
 						$this->show_error_message();
+					} else if( strcasecmp( $response['statusCode'], 'MCRYPT_ERROR') == 0) {
+						update_option('mo_ldap_message', $response['statusMessage']);
+						$this->show_error_message();
 					} else {
 						update_option( 'mo_ldap_message', 'There was an error processing your request. Please verify the Search Base(s) and Search filter. Your user should be present in the Search base defined.');
 						$this->show_error_message();
@@ -377,6 +389,9 @@
 						update_option( 'mo_ldap_message', $response['statusMessage']);
 						$this->show_error_message();
 					} else if( strcasecmp( $response['statusCode'], 'CURL_ERROR') == 0) {
+						update_option('mo_ldap_message', $response['statusMessage']);
+						$this->show_error_message();
+					} else if( strcasecmp( $response['statusCode'], 'MCRYPT_ERROR') == 0) {
 						update_option('mo_ldap_message', $response['statusMessage']);
 						$this->show_error_message();
 					} else {

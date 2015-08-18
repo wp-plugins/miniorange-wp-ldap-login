@@ -8,18 +8,47 @@ function mo_ldap_settings() {
 		$active_tab = 'default';
 	}
 	?>
-	<h2>miniOrange LDAP Login</h2>
+	<h2>LDAP/Active Directory Login for Cloud</h2>
 	<?php
 		if(!Mo_Ldap_Util::is_curl_installed()) {
 			?>
-			<p><font color="#FF0000">(Warning: <a href="http://php.net/manual/en/curl.installation.php">PHP cURL extension</a> is not installed or disabled)</font></p>
+			
+			<div id="help_curl_warning_title" class="mo_ldap_title_panel">
+				<p><a target="_blank" style="cursor: pointer;"><font color="#FF0000">Warning: PHP cURL extension is not installed or disabled. <span style="color:blue">Click here</span> for instructions to enable it.</font></a></p>
+			</div>
+			<div hidden="" id="help_curl_warning_desc" class="mo_ldap_help_desc">
+					<ul>
+						<li>Step 1:&nbsp;&nbsp;&nbsp;&nbsp;Open php.ini file located under php installation folder.</li>
+						<li>Step 2:&nbsp;&nbsp;&nbsp;&nbsp;Search for <b>extension=php_curl.dll</b> </li>
+						<li>Step 3:&nbsp;&nbsp;&nbsp;&nbsp;Uncomment it by removing the semi-colon(<b>;</b>) in front of it.</li>
+						<li>Step 4:&nbsp;&nbsp;&nbsp;&nbsp;Restart the Apache Server.</li>
+					</ul>
+					For any further queries, please <a href="mailto:info@miniorange.com">contact us</a>.								
+			</div>
+					
 			<?php
 		}
+		if(!Mo_Ldap_Util::is_extension_installed('mcrypt')) {
+			?>
+			<font color="#FF0000">(Warning: <a target="_blank" href="http://php.net/manual/en/mcrypt.installation.php">PHP mcrypt extension</a> is not installed or disabled)</font> <span id="help_mcrypt_warning_title" class="mo_ldap_title_panel">
+				<a target="_blank" style="cursor: pointer;"><span style="color:blue">(Why we need it?)</span></a></span>
+			
+			<div hidden="" id="help_mcrypt_warning_desc" class="mo_ldap_help_desc">
+					<ul>
+						<li>PHP Mcrypt extension is required to Encrypt LDAP configuration in such a way as to make it unreadable by anyone except those possessing special knowledge (usually referred to as a "key") that allows them to change the information back to its original, readable form.</li>
+						<li>Encryption is important because it allows you to securely protect your LDAP configuration that you don't want anyone else to have access to.</li>
+					</ul>
+					For any further queries, please <a href="mailto:info@miniorange.com">contact us</a>.								
+			</div>		
+			<?php
+		}
+		
 	?>
 	<div class="mo2f_container">
 		<h2 class="nav-tab-wrapper">
 			<a class="nav-tab <?php echo $active_tab == 'default' ? 'nav-tab-active' : ''; ?>" href="<?php echo add_query_arg( array('tab' => 'default'), $_SERVER['REQUEST_URI'] ); ?>">Test Default LDAP</a>
 			<a class="nav-tab <?php echo $active_tab == 'config' ? 'nav-tab-active' : ''; ?>" href="<?php echo add_query_arg( array('tab' => 'config'), $_SERVER['REQUEST_URI'] ); ?>">LDAP Configuration</a>
+			<a class="nav-tab <?php echo $active_tab == 'troubleshooting' ? 'nav-tab-active' : ''; ?>" href="<?php echo add_query_arg( array('tab' => 'troubleshooting'), $_SERVER['REQUEST_URI'] ); ?>">Troubleshooting</a>
 		</h2>
 		<table style="width:100%;">
 			<tr>
@@ -37,6 +66,8 @@ function mo_ldap_settings() {
 								} else {
 									mo_ldap_configuration_page();
 								}
+							} else if($active_tab == 'troubleshooting'){ 
+								mo_ldap_local_troubleshooting();
 							} else {
 								mo_ldap_default_config_page();
 							}
@@ -309,6 +340,7 @@ function mo_ldap_configuration_page(){
 								<tr><td>email</td><td>(&(objectClass=*)(<b>mail</b>=?))</td></tr> 
 								<tr><td>logon name</td><td>(&(objectClass=*)(<b>sAMAccountName</b>=?))<br/>(&(objectClass=*)(<b>userPrincipalName</b>=?))</td></tr>
 								<tr><td>custom attribute where you store your WordPress usernames use</td> <td>(&(objectClass=*)(<b>customAttribute</b>=?))</td></tr>
+								<tr><td>if you store Wordpress usernames in multiple attributes(eg: some users login using email and others using their username)</td><td>(&(objectClass=*)(<b>|</b>(<b>cn=?</b>)(<b>mail=?</b>)))</td></tr>
 							</table>
 							</ol>
 						</tr>
@@ -489,5 +521,200 @@ function mo_ldap_show_otp_verification(){
 <?php
 }
 /* End Show OTP verification page*/
+
+
+function mo_ldap_local_troubleshooting(){
+	?>
+	
+	<div class="mo_ldap_table_layout">
+		<table class="mo_ldap_help">
+					<tbody><tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_curl_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">How to enable PHP cURL extension? (Pre-requisite)</div>
+							</div>
+							<div hidden="" id="help_curl_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>Step 1:&nbsp;&nbsp;&nbsp;&nbsp;Open php.ini file located under php installation folder.</li>
+									<li>Step 2:&nbsp;&nbsp;&nbsp;&nbsp;Search for <b>extension=php_curl.dll</b>. </li>
+									<li>Step 3:&nbsp;&nbsp;&nbsp;&nbsp;Uncomment it by removing the semi-colon(<b>;</b>) in front of it.</li>
+									<li>Step 4:&nbsp;&nbsp;&nbsp;&nbsp;Restart the Apache Server.</li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+				
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_ldap_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">Allow access from Firewall (Pre-requisite)</div>
+							</div>
+							<div hidden="" id="help_ldap_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>You need to allow incoming requests from hosts - <font style="color:blue">52.6.168.155</font> and <font style="color:blue">52.6.204.243</font> by a firewall rule for the port <font style="color:blue">389</font>(<font style="color:blue">636</font> for SSL or ldaps) on LDAP Server.</li>
+									<li>You can follow steps here : <a href="http://www.rackspace.com/knowledge_center/article/create-an-inbound-port-allow-rule-for-windows-firewall-2008" target="_blank">http://www.rackspace.com/knowledge_center/article/create-an-inbound-port-allow-rule-for-windows-firewall-2008</a></li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+						<div id="help_ping_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">Why is Contact LDAP Server not working?</div>
+							</div>
+							<div hidden="" id="help_ping_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;Check your LDAP Server URL to see if it is correct.<br>
+									 eg. ldap://myldapserver.domain:389 , ldap://89.38.192.1:389. When using SSL, the host may have to take the form ldaps://host:636.</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;Your LDAP Server may be behind a firewall. Check if the firewall is open to allow requests from hosts - <font style="color:blue">52.6.168.155</font> and <font style="color:blue">52.6.204.243</font> and the port <font style="color:blue">389</font>(<font style="color:blue">636</font> for SSL or ldaps) on LDAP Server.</li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_invaliddn_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">Why is Test LDAP Configuration not working?</div>
+							</div>
+							<div hidden="" id="help_invaliddn_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;Check if you have entered valid Service Account DN(distinguished Name) of the LDAP server. <br>e.g. cn=username,cn=group,dc=domain,dc=com<br>
+									uid=username,ou=organisational unit,dc=domain,dc=com</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;Check if you have entered correct Password for the Service Account.</li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_invalidsf_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">Why is Test Authentication not working?</div>
+							</div>
+							<div hidden="" id="help_invalidsf_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;The username/password combination you provided may be incorrect.</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;You may have provided a <b>Search Base(s)</b> in which the user does not exist.</li>
+									<li>3.&nbsp;&nbsp;&nbsp;&nbsp;Your <b>Search Filter</b> may be incorrect and the username mapping may be to an LDAP attribute other than the ones provided in the Search Filter</li>
+									<li>4.&nbsp;&nbsp;&nbsp;&nbsp;You may have provided an incorrect <b>Distinguished Name attribute</b> for your LDAP Server.
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_seracccre_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">What are the LDAP Service Account Credentials?</div>
+							</div>
+							<div hidden="" id="help_seracccre_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;Service account is an non privileged user which is used to bind to the LDAP Server. It is the preferred method of binding to the LDAP Server if you have to perform search operations on the directory.</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;The distinguished name(DN) of the service account object and the password are provided as credentials.</li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_sbase_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">What is meant by Search Base in my LDAP environment?</div>
+							</div>
+							<div hidden="" id="help_sbase_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;Search Base denotes the location in the directory where the search for a particular directory object begins.</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;It is denoted as the distinguished name of the search base directory object. eg: CN=Users,DC=domain,DC=com.</li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_sfilter_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">What is meant by Search Filter in my LDAP environment?</div>
+							</div>
+							<div hidden="" id="help_sfilter_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;Search Filter is a basic LDAP Query for searching users based on mapping of username to a particular LDAP attribute.</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;The following are some commonly used Search Filters. You will need to use a search filter which uses the attributes specific to your LDAP environment. Confirm from your LDAP administrator.</li>
+										<ul>
+											<table>
+												<tr><td style="width:50%">common name</td><td>(&(objectClass=*)(<b>cn</b>=?))</td></tr>
+												<tr><td>email</td><td>(&(objectClass=*)(<b>mail</b>=?))</td></tr> 
+												<tr><td>logon name</td><td>(&(objectClass=*)(<b>sAMAccountName</b>=?))<br/>(&(objectClass=*)(<b>userPrincipalName</b>=?))</td></tr>
+												<tr><td>custom attribute where you store your WordPress usernames use</td> <td>(&(objectClass=*)(<b>customAttribute</b>=?))</td></tr>
+												<tr><td>if you store Wordpress usernames in multiple attributes(eg: some users login using email and others using their username)</td><td>(&(objectClass=*)(<b>|</b>(<b>cn=?</b>)(<b>mail=?</b>)))</td></tr>
+											</table>
+										</ul>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_ou_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">How do users present in different Organizational Units(OU's) login into Wordpress?</div>
+							</div>
+							<div hidden="" id="help_ou_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;You can provide multiple search bases seperated by a semi-colon to ensure users present in different OU's are able to login into Wordpress.</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;You can also provide the RootDN value in the Search Base so that users in all subtrees of the RootDN are able to login.</li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_loginusing_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">Some of my users login using their email and the rest using their usernames. How will both of them be able to login?</div>
+							</div>
+							<div hidden="" id="help_loginusing_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;You need to provide a search filter which checks for the username against multiple LDAP attributes.</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;For example, if you have some users who login using their email and some using their username, the following search filter can be applied: (&(objectClass=*)(|(mail=?)(cn=?)))</li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+					<tr>
+						<td class="mo_ldap_help_cell">
+							<div id="help_diffdist_title" class="mo_ldap_title_panel">
+								<div class="mo_ldap_help_title">What are the different Distinguished Name attributes?</div>
+							</div>
+							<div hidden="" id="help_diffdist_desc" class="mo_ldap_help_desc" style="display: none;">
+								<ul>
+									<li>1.&nbsp;&nbsp;&nbsp;&nbsp;The distinguished name attribute depends on the LDAP environment.</li>
+									<li>2.&nbsp;&nbsp;&nbsp;&nbsp;For example, Active Directory(AD) uses distinguishedName to store the Distinguished Name(DN) attribute</li>
+								</ul>
+								For any further queries, please contact us.								
+							</div>
+						</td>
+					</tr>
+					
+				</tbody></table>
+	</div>
+	
+	
+	<?php
+
+}
+
 
 ?>
