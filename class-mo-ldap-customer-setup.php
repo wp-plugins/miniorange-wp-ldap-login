@@ -45,7 +45,7 @@ class Mo_Ldap_Customer{
 		
 		$fields = array(
 			'companyName' => $_SERVER['SERVER_NAME'],
-			'areaOfInterest' => 'WP LDAP Plugin',
+			'areaOfInterest' => 'WP LDAP for Cloud',
 			'firstname' => $current_user->user_firstname,
 			'lastname' => $current_user->user_lastname,
 			'email' => $this->email,
@@ -309,7 +309,7 @@ class Mo_Ldap_Customer{
 		$customer_id = get_option('mo_ldap_admin_customer_key');
 		$application_name = $_SERVER['SERVER_NAME'];
 		$admin_email = get_option('mo_ldap_admin_email');
-		$app_type = 'WP LDAP Login Plugin';
+		$app_type = 'WP LDAP for Cloud';
 		$request_type = 'Ping LDAP Server';
 		$url = get_option('mo_ldap_host_name') . '/moas/api/ldap/ping?customerId=' . urlencode($customer_id)
 				. '&endUserEmail=' . urlencode($admin_email) . '&ldapServerUrl=' . urlencode($ldap_server_url)

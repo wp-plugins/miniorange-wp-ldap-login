@@ -67,7 +67,7 @@ function mo_ldap_settings() {
 									mo_ldap_configuration_page();
 								}
 							} else if($active_tab == 'troubleshooting'){ 
-								mo_ldap_local_troubleshooting();
+								mo_ldap_troubleshooting();
 							} else {
 								mo_ldap_default_config_page();
 							}
@@ -523,7 +523,7 @@ function mo_ldap_show_otp_verification(){
 /* End Show OTP verification page*/
 
 
-function mo_ldap_local_troubleshooting(){
+function mo_ldap_troubleshooting(){
 	?>
 	
 	<div class="mo_ldap_table_layout">
